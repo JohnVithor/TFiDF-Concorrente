@@ -2,4 +2,5 @@
 out/
 target/
 results/
+amazon_review_polarity_csv/
 *.parquet
