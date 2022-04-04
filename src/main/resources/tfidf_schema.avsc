@@ -1,0 +1,19 @@
+{
+ "type": "record",
+ "name": "TFiDFResults",
+ "doc": "TFiDFResults",
+ "fields":
+  [{
+   "name": "term",
+   "type": "string"
+  },
+  {
+   "name": "doc_id",
+   "type": "int"
+  },
+  {
+   "name": "value",
+   "type": "float"
+  }
+ ]
+}
