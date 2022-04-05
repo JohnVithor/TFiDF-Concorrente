@@ -9,7 +9,6 @@ public class Document {
 	static int vocab_size = 0;
 	private final String title;
 	private final Map<Integer, Double> frequency_table = new HashMap<>();
-	private final double numberOfTerms;
 
 	public Document(String title, String content) {
 		this.title = title;
@@ -17,7 +16,7 @@ public class Document {
 				.replaceAll("[^a-zA-Z0-9 ]", "")
 				.toLowerCase()
 				.split("\\s+");
-		numberOfTerms = tokens.length;
+		double numberOfTerms = tokens.length;
 		for (String token: tokens) {
 			if(token.length() == 0 || stopwords.contains(token))
 			{

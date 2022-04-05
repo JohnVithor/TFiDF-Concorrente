@@ -15,6 +15,8 @@ import org.apache.parquet.avro.AvroParquetWriter;
 import org.apache.parquet.hadoop.ParquetFileWriter;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.hadoop.util.HadoopOutputFile;
+import org.apache.parquet.io.OutputFile;
 
 public class Main {
     public static void main(String[] args) {
@@ -52,13 +54,14 @@ public class Main {
             System.out.println("Vocabulary Size: " + Document.vocab_size);
             int doc_len = documentList.size();
 
+            Configuration conf = new Configuration();
+            OutputFile out = HadoopOutputFile.fromPath(new Path(docs_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
-                    <GenericData.Record>builder(new Path(docs_out_fileName))
-                    .withRowGroupSize(ParquetWriter.DEFAULT_BLOCK_SIZE)
+                    <GenericData.Record>builder(out)
                     .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
                     .withSchema(schema_docs)
-                    .withConf(new Configuration())
-                    .withCompressionCodec(CompressionCodecName.SNAPPY)
+                    .withConf(conf)
+                    .withCompressionCodec(CompressionCodecName.GZIP)
                     .withValidation(false)
                     .withDictionaryEncoding(false)
                     .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
@@ -75,13 +78,12 @@ public class Main {
             } catch(IOException e) {
                 e.printStackTrace();
             }
-
+            out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
-                    <GenericData.Record>builder(new Path(tfidf_out_fileName))
-                    .withRowGroupSize(ParquetWriter.DEFAULT_BLOCK_SIZE)
+                    <GenericData.Record>builder(out)
                     .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
                     .withSchema(schema_tfidf)
-                    .withConf(new Configuration())
+                    .withConf(conf)
                     .withCompressionCodec(CompressionCodecName.SNAPPY)
                     .withValidation(false)
                     .withDictionaryEncoding(false)
