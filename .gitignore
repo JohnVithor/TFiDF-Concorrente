@@ -2,6 +2,9 @@
 out/
 target/
 results/
-amazon_review_polarity_csv/
+logs/
+datasets/
 *.parquet
 *.parquet.crc
+*.log
+*.log.old

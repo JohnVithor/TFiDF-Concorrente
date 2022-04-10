@@ -1,12 +1,15 @@
 package main;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.stream.Collectors;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.conf.Configuration;
@@ -19,41 +22,61 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
 public class Main {
-    public static void main(String[] args) {
-        String filename = "devel_100_000";
+    static public String filename = "devel_10_000";
+    public static void main(String[] args) throws FileNotFoundException {
+        System.setErr(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) {/*Descarta o log*/}
+        }));
+        PrintStream out = new PrintStream(new OutputStream() {
+            final FileOutputStream f = new FileOutputStream("logs/output_"+filename+".log");
+            @Override
+            public void write(int b) throws IOException {
+                f.write(b);
+                System.out.write(b);
+            }
+        });
+        run(out);
+    }
 
-        List<Document> documentList = new ArrayList<>();
+    public static void run(PrintStream output) {
 
-        String input_path = "amazon_review_polarity_csv/"+filename+".csv";
+        List<Document> documentList;
+        String input_path = "datasets/"+filename+".csv";
         String docs_schema_path = "src/main/resources/docs_schema.avsc";
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String docs_out_fileName = filename + "_docs_results.parquet";
-        String tfidf_out_fileName = filename+ "_tfidf_results.parquet";
-
-        try(BufferedReader reader = new BufferedReader(new FileReader("amazon_review_polarity_csv/stopwords.txt")))
+        String docs_out_fileName = "results/" + filename + "_docs_results.parquet";
+        String tfidf_out_fileName = "results/" + filename+ "_tfidf_results.parquet";
+        Duration doc_avgduration = Duration.ZERO;
+        Instant start = Instant.now();
+        try(BufferedReader reader = new BufferedReader(new FileReader("datasets/stopwords.txt")))
         {
             Document.stopwords.addAll(Arrays.stream(reader.readLine().split(",")).toList());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         try {
             Schema schema_docs = new Schema.Parser().parse(new FileInputStream(docs_schema_path));
             Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-            BufferedReader br = Files.newBufferedReader(Paths.get(input_path), StandardCharsets.UTF_8);
+            documentList = Files.lines(Paths.get(input_path))
+                    .map(line -> {
+                        String [] cells = line.split("\",\"");
+                        return new Document(cells[1], cells[2]);
+                    }).collect(Collectors.toList());//print each line
 
-            for (String line; (line = br.readLine()) != null;) {
-                String [] cells = line.split("\",\"");
-                Document d = new Document(cells[1], cells[2]);
-                documentList.add(d);
-            }
-            br.close();
+//            BufferedReader br = Files.newBufferedReader(Paths.get(input_path), StandardCharsets.UTF_8);
+//            for (String line; (line = br.readLine()) != null;) {
+//                String [] cells = line.split("\",\"");
+//                Document d = new Document(cells[1], cells[2]);
+//                documentList.add(d);
+//            }
+//            br.close();
 
             double[] terms_count_all_docs = new double[Document.vocab_size];
-            System.out.println("Vocabulary Size: " + Document.vocab_size);
             int doc_len = documentList.size();
-
+            output.println("Vocabulary Size: " + Document.vocab_size);
+            output.println("Number of Documents: " + doc_len);
             Configuration conf = new Configuration();
             OutputFile out = HadoopOutputFile.fromPath(new Path(docs_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
@@ -90,7 +113,10 @@ public class Main {
                     .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
                     .build()) {
                 GenericData.Record record = new GenericData.Record(schema_tfidf);
+                long n = 1;
+                Instant doc_start;
                 for (int j = 0; j < doc_len; ++j) {
+                    doc_start = Instant.now();
                     for (int i = 0; i < Document.vocab_size; ++i) {
                         double idf = Math.log(doc_len / terms_count_all_docs[i]);
                         double tf = documentList.get(j).calculateTermFrequency(i);
@@ -103,6 +129,10 @@ public class Main {
                         }
                     }
                     documentList.set(j, null);
+                    doc_avgduration = doc_avgduration.plus(
+                            Duration.between(doc_start, Instant.now())
+                                    .minus(doc_avgduration).dividedBy(n));
+                    ++n;
                 }
             } catch(IOException e) {
                 e.printStackTrace();
@@ -110,5 +140,14 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        output.println("Avg Time per Document in nanoseconds: " + doc_avgduration.toNanos());
+        output.println("Avg Time per Document in milliseconds: " + doc_avgduration.toMillis());
+        output.println("Avg Time per Document in seconds: " + doc_avgduration.toSeconds());
+        output.println("Avg Time per Document in minutes: " + doc_avgduration.toMinutes());
+        Duration d = Duration.between(start, Instant.now());
+        output.println("Total Time in nanoseconds: " + d.toNanos());
+        output.println("Total Time in milliseconds: " + d.toMillis());
+        output.println("Total Time in minutes: " + d.toMinutes());
+        output.println("Total Time in seconds: " + d.toSeconds());
     }
 }
