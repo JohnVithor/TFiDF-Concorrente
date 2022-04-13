@@ -22,7 +22,7 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
 public class SerialMain {
-    static public String filename = "devel_1_000";
+    static public String filename = "devel_100_000";
     public static void main(String[] args) throws FileNotFoundException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
@@ -147,7 +147,7 @@ public class SerialMain {
         Duration d = Duration.between(start, Instant.now());
         output.println("Total Time in nanoseconds: " + d.toNanos());
         output.println("Total Time in milliseconds: " + d.toMillis());
-        output.println("Total Time in minutes: " + d.toMinutes());
         output.println("Total Time in seconds: " + d.toSeconds());
+        output.println("Total Time in minutes: " + d.toMinutes());
     }
 }
