@@ -21,15 +21,15 @@ import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
-public class Main {
-    static public String filename = "devel_10_000";
+public class SerialMain {
+    static public String filename = "devel_1_000";
     public static void main(String[] args) throws FileNotFoundException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) {/*Descarta o log*/}
         }));
         PrintStream out = new PrintStream(new OutputStream() {
-            final FileOutputStream f = new FileOutputStream("logs/output_"+filename+".log");
+            final FileOutputStream f = new FileOutputStream("logs_serial/output_"+filename+".log");
             @Override
             public void write(int b) throws IOException {
                 f.write(b);
@@ -45,8 +45,8 @@ public class Main {
         String input_path = "datasets/"+filename+".csv";
         String docs_schema_path = "src/main/resources/docs_schema.avsc";
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String docs_out_fileName = "results/" + filename + "_docs_results.parquet";
-        String tfidf_out_fileName = "results/" + filename+ "_tfidf_results.parquet";
+        String docs_out_fileName = "results_serial/" + filename + "_docs_results.parquet";
+        String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
         Duration doc_avgduration = Duration.ZERO;
         Instant start = Instant.now();
         try(BufferedReader reader = new BufferedReader(new FileReader("datasets/stopwords.txt")))

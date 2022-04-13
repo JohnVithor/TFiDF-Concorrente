@@ -5,7 +5,7 @@ import java.util.*;
 public class Document {
 	static Set<String> stopwords = new HashSet<>();
 	static List<String> id_token_vocabulary = new ArrayList<>();
-	static HashMap<String, Integer> token_id_vocabulary = new HashMap<>();
+	static final HashMap<String, Integer> token_id_vocabulary = new HashMap<>();
 	static int vocab_size = 0;
 	private final String title;
 	private final Map<Integer, Double> frequency_table = new HashMap<>();
@@ -22,22 +22,22 @@ public class Document {
 			{
 				continue;
 			}
-			int this_id = token_id_vocabulary.getOrDefault(token, vocab_size);
+			int this_id;
 
-			if (this_id == vocab_size) {
-				token_id_vocabulary.put(token, vocab_size);
-				id_token_vocabulary.add(token);
-				++vocab_size;
+			synchronized (token_id_vocabulary) {
+				this_id = token_id_vocabulary.getOrDefault(token, vocab_size);
+				if (this_id == vocab_size) {
+					token_id_vocabulary.put(token, vocab_size);
+					id_token_vocabulary.add(token);
+					++vocab_size;
+				}
 			}
-
 			frequency_table.compute(this_id, (key, val)
 					-> (val == null)
 					? 1
 					: val + 1);
 		}
-		for (Map.Entry<Integer, Double> set: frequency_table.entrySet()) {
-			frequency_table.put(set.getKey(), set.getValue() / numberOfTerms);
-		}
+		frequency_table.replaceAll((k, v) -> v / numberOfTerms);
 	}
 
 	public String getTitle() {

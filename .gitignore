@@ -1,10 +1,14 @@
 .idea/
 out/
 target/
-results/
-logs/
+results_serial/
+results_concurrent/
+logs_serial/
+logs_concurrent/
 datasets/
+/comparator/env/
 *.parquet
 *.parquet.crc
 *.log
 *.log.old
+
