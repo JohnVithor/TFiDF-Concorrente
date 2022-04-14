@@ -3,6 +3,7 @@ package main;
 import java.util.*;
 
 public class ConcurrentDocument {
+	static private final Object lock = new Object();
 	static Set<String> stopwords = new HashSet<>();
 	static List<String> id_token_vocabulary = new ArrayList<>();
 	static final HashMap<String, Integer> token_id_vocabulary = new HashMap<>();
@@ -24,7 +25,7 @@ public class ConcurrentDocument {
 			}
 			int this_id;
 
-			synchronized (token_id_vocabulary) {
+			synchronized (lock) {
 				this_id = token_id_vocabulary.getOrDefault(token, vocab_size);
 				if (this_id == vocab_size) {
 					token_id_vocabulary.put(token, vocab_size);

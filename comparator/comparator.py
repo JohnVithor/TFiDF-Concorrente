@@ -1,5 +1,6 @@
 """comparator.py"""
 
+import sys
 import pandas as pd
 
 FILENAME='devel_10_000'
@@ -20,19 +21,22 @@ def main():
     # Testando equivalencia dos resultados das versoes seriais e concorrentes
 
     serial = pd.read_parquet(f"../results_serial/{FILENAME}_tfidf_results.parquet")
-    serial.sort_values(['doc_id', 'term'], inplace=True)
+    serial.sort_values(['doc', 'term'], inplace=True)
     serial.reset_index(drop=True, inplace=True)
 
     concurrent = pd.read_parquet(f"../results_concurrent/{FILENAME}_tfidf_results.parquet")
-    concurrent.sort_values(['doc_id', 'term'], inplace=True)
+    concurrent.sort_values(['doc', 'term'], inplace=True)
     concurrent.reset_index(drop=True, inplace=True)
 
+    result_comparisson = serial.equals(concurrent)
     print(f"Os resultados da versão seria e da versão concorrente \
-    são equivalentes no arquivo {FILENAME}?", serial.equals(concurrent))
+    são equivalentes no arquivo {FILENAME}?", result_comparisson)
 
     del serial
     del concurrent
 
+    if not result_comparisson:
+        sys.exit()
 
     with open(f"../logs_serial/output_{FILENAME}.log", encoding="UTF-8") as log_serial,\
     open(f"../logs_concurrent/output_{FILENAME}.log", encoding="UTF-8") as log_concurrent:

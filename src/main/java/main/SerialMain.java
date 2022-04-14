@@ -9,6 +9,7 @@ import java.util.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -22,7 +23,7 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
 public class SerialMain {
-    static public String filename = "devel_100_000";
+    static public String filename = "devel_10_000";
     public static void main(String[] args) throws FileNotFoundException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
@@ -43,9 +44,7 @@ public class SerialMain {
 
         List<Document> documentList;
         String input_path = "datasets/"+filename+".csv";
-        String docs_schema_path = "src/main/resources/docs_schema.avsc";
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String docs_out_fileName = "results_serial/" + filename + "_docs_results.parquet";
         String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
         Duration doc_avgduration = Duration.ZERO;
         Instant start = Instant.now();
@@ -57,51 +56,27 @@ public class SerialMain {
             e.printStackTrace();
         }
         try {
-            Schema schema_docs = new Schema.Parser().parse(new FileInputStream(docs_schema_path));
             Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-            documentList = Files.lines(Paths.get(input_path))
-                    .map(line -> {
-                        String [] cells = line.split("\",\"");
-                        return new Document(cells[1], cells[2]);
-                    }).collect(Collectors.toList());//print each line
-
-//            BufferedReader br = Files.newBufferedReader(Paths.get(input_path), StandardCharsets.UTF_8);
-//            for (String line; (line = br.readLine()) != null;) {
-//                String [] cells = line.split("\",\"");
-//                Document d = new Document(cells[1], cells[2]);
-//                documentList.add(d);
-//            }
-//            br.close();
+            try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
+                documentList = lines
+                        .map(line -> {
+                            String [] cells = line.split("\",\"");
+                            return new Document(cells[1], cells[2]);
+                        }).collect(Collectors.toList());
+            }
 
             double[] terms_count_all_docs = new double[Document.vocab_size];
             int doc_len = documentList.size();
             output.println("Vocabulary Size: " + Document.vocab_size);
             output.println("Number of Documents: " + doc_len);
-            Configuration conf = new Configuration();
-            OutputFile out = HadoopOutputFile.fromPath(new Path(docs_out_fileName), conf);
-            try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
-                    <GenericData.Record>builder(out)
-                    .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
-                    .withSchema(schema_docs)
-                    .withConf(conf)
-                    .withCompressionCodec(CompressionCodecName.GZIP)
-                    .withValidation(false)
-                    .withDictionaryEncoding(false)
-                    .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-                    .build()){
-                GenericData.Record record = new GenericData.Record(schema_docs);
-                for (int i = 0; i < doc_len; ++i) {
-                    for (Map.Entry<Integer, Double> set: documentList.get(i).getFrequency_table().entrySet()) {
-                        terms_count_all_docs[set.getKey()] += 1;
-                    }
-                    record.put("doc_id", i);
-                    record.put("value", documentList.get(i).getTitle());
-                    writer.write(record);
+            for (Document document : documentList) {
+                for (Integer key : document.getFrequency_table().keySet()) {
+                    terms_count_all_docs[key] += 1;
                 }
-            } catch(IOException e) {
-                e.printStackTrace();
             }
-            out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
+
+            Configuration conf = new Configuration();
+            OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
                     <GenericData.Record>builder(out)
                     .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
@@ -115,20 +90,16 @@ public class SerialMain {
                 GenericData.Record record = new GenericData.Record(schema_tfidf);
                 long n = 1;
                 Instant doc_start;
-                for (int j = 0; j < doc_len; ++j) {
+                for (Document doc:documentList) {
                     doc_start = Instant.now();
-                    for (int i = 0; i < Document.vocab_size; ++i) {
-                        double idf = Math.log(doc_len / terms_count_all_docs[i]);
-                        double tf = documentList.get(j).calculateTermFrequency(i);
-                        double tfidf = tf*idf;
-                        if (tfidf != 0.0) {
-                            record.put("term", Document.id_token_vocabulary.get(i));
-                            record.put("doc_id", j);
-                            record.put("value", tfidf);
-                            writer.write(record);
-                        }
+                    for (Integer key:doc.getFrequency_table().keySet()) {
+                        double idf = Math.log(doc_len / terms_count_all_docs[key]);
+                        double tf = doc.calculateTermFrequency(key);
+                        record.put("term", Document.id_token_vocabulary.get(key));
+                        record.put("doc", doc.getTitle());
+                        record.put("value", tf*idf);
+                        writer.write(record);
                     }
-                    documentList.set(j, null);
                     doc_avgduration = doc_avgduration.plus(
                             Duration.between(doc_start, Instant.now())
                                     .minus(doc_avgduration).dividedBy(n));

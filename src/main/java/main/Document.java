@@ -24,13 +24,11 @@ public class Document {
 			}
 			int this_id;
 
-			synchronized (token_id_vocabulary) {
-				this_id = token_id_vocabulary.getOrDefault(token, vocab_size);
-				if (this_id == vocab_size) {
-					token_id_vocabulary.put(token, vocab_size);
-					id_token_vocabulary.add(token);
-					++vocab_size;
-				}
+			this_id = token_id_vocabulary.getOrDefault(token, vocab_size);
+			if (this_id == vocab_size) {
+				token_id_vocabulary.put(token, vocab_size);
+				id_token_vocabulary.add(token);
+				++vocab_size;
 			}
 			frequency_table.compute(this_id, (key, val)
 					-> (val == null)

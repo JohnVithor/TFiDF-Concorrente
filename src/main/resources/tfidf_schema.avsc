@@ -8,8 +8,8 @@
    "type": "string"
   },
   {
-   "name": "doc_id",
-   "type": "int"
+   "name": "doc",
+   "type": "string"
   },
   {
    "name": "value",
