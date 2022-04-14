@@ -17,8 +17,12 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -88,58 +92,60 @@ public class ConcurrentMain {
     }
 
     private static double[] getTerms_count_all_docs(List<ConcurrentDocument> documentList) {
+        List<Object> locks = Collections.nCopies(ConcurrentDocument.vocab_size,new Object());
         double[] terms_count_all_docs = new double[ConcurrentDocument.vocab_size];
-        for (ConcurrentDocument document : documentList) {
-            for (Integer key : document.getFrequency_table().keySet()) {
-                terms_count_all_docs[key] += 1;
+        documentList.parallelStream().forEach(concurrentDocument -> {
+            for (Integer key : concurrentDocument.getFrequency_table().keySet()) {
+                synchronized (locks.get(key)){
+                    terms_count_all_docs[key] += 1;
+                }
             }
-        }
+        });
         return terms_count_all_docs;
     }
     public static Duration process(List<ConcurrentDocument> documentList, double[] terms_count_all_docs) throws IOException {
-        Duration doc_avgduration = Duration.ZERO;
-        Configuration conf = new Configuration();
+        Optional<Duration> doc_avgduration = Optional.of(Duration.ZERO);
         Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-        OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
         int doc_len = documentList.size();
-        try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
-                <GenericData.Record>builder(out)
-                .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
-                .withSchema(schema_tfidf)
-                .withConf(conf)
-                .withCompressionCodec(CompressionCodecName.SNAPPY)
-                .withValidation(false)
-                .withDictionaryEncoding(true)
-                .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-                .build()) {
-            GenericData.Record record = new GenericData.Record(schema_tfidf);
-            long n = 1;
-            Instant doc_start;
-            for (ConcurrentDocument doc:documentList) {
-                doc_start = Instant.now();
-                processDocument(terms_count_all_docs, doc_len, writer, record, doc);
-                doc_avgduration = doc_avgduration.plus(
-                        Duration.between(doc_start, Instant.now())
-                                .minus(doc_avgduration).dividedBy(n));
-                ++n;
+        //
+        BlockingQueue<GenericData.Record> buffer = new LinkedBlockingQueue<>(doc_len);
+
+        GenericData.Record record = new GenericData.Record(schema_tfidf);
+        AtomicLong n = new AtomicLong(0);
+        doc_avgduration = documentList.parallelStream().map(concurrentDocument -> {
+            Instant doc_start = Instant.now();
+            record.put("doc", concurrentDocument.getTitle());
+            try {
+                processDocument(terms_count_all_docs, doc_len, record, concurrentDocument, buffer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch(IOException e) {
-            e.printStackTrace();
+            return Duration.between(doc_start, Instant.now());
+        }).reduce((duration, duration2) ->
+                duration.plus(duration2.minus(duration).
+                        dividedBy(n.incrementAndGet())));
+        if (doc_avgduration.isPresent())
+            return doc_avgduration.get();
+        else {
+            throw new RuntimeException();
         }
-        return doc_avgduration;
     }
     private static void processDocument(double[] terms_count_all_docs,
                                         int doc_len,
-                                        ParquetWriter<GenericData.Record> writer,
-                                        GenericData.Record record,
-                                        ConcurrentDocument doc) throws IOException {
+                                        GenericData.Record record_orig,
+                                        ConcurrentDocument doc,
+                                        BlockingQueue<GenericData.Record> buffer) throws IOException {
         for (Integer key: doc.getFrequency_table().keySet()) {
             double idf = Math.log(doc_len / terms_count_all_docs[key]);
             double tf = doc.calculateTermFrequency(key);
+            GenericData.Record record = new GenericData.Record(record_orig, false);
             record.put("term", ConcurrentDocument.id_token_vocabulary.get(key));
-            record.put("doc", doc.getTitle());
             record.put("value", tf*idf);
-            writer.write(record);
+            try {
+                buffer.put(record);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

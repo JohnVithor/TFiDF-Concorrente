@@ -117,6 +117,7 @@ public class SerialMain {
             Instant doc_start;
             for (Document doc:documentList) {
                 doc_start = Instant.now();
+                record.put("doc", doc.getTitle());
                 processDocument(terms_count_all_docs, doc_len, writer, record, doc);
                 doc_avgduration = doc_avgduration.plus(
                         Duration.between(doc_start, Instant.now())
@@ -133,7 +134,6 @@ public class SerialMain {
             double idf = Math.log(doc_len / terms_count_all_docs[key]);
             double tf = doc.calculateTermFrequency(key);
             record.put("term", Document.id_token_vocabulary.get(key));
-            record.put("doc", doc.getTitle());
             record.put("value", tf*idf);
             writer.write(record);
         }
