@@ -46,72 +46,16 @@ public class SerialMain {
                 System.out.write(b);
             }
         });
-        List<Document> documentList;
-        Duration doc_avgduration = Duration.ZERO;
         Instant start = Instant.now();
-        try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path)))
-        {
-            Document.stopwords.addAll(Arrays.stream(reader.readLine().split(",")).toList());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
-            documentList = lines
-                    .map(line -> {
-                        String [] cells = line.split("\",\"");
-                        return new Document(cells[1], cells[2]);
-                    }).collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        double[] terms_count_all_docs = new double[Document.vocab_size];
-        int doc_len = documentList.size();
-        output.println("Vocabulary Size: " + Document.vocab_size);
-        output.println("Number of Documents: " + doc_len);
-        for (Document document : documentList) {
-            for (Integer key : document.getFrequency_table().keySet()) {
-                terms_count_all_docs[key] += 1;
-            }
-        }
-        Configuration conf = new Configuration();
+        load_stop_words();
+        Duration doc_avgduration;
         try {
-            Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-            OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
-            try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
-                    <GenericData.Record>builder(out)
-                    .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
-                    .withSchema(schema_tfidf)
-                    .withConf(conf)
-                    .withCompressionCodec(CompressionCodecName.SNAPPY)
-                    .withValidation(false)
-                    .withDictionaryEncoding(false)
-                    .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
-                    .build()) {
-                GenericData.Record record = new GenericData.Record(schema_tfidf);
-                long n = 1;
-                Instant doc_start;
-                for (Document doc:documentList) {
-                    doc_start = Instant.now();
-                    for (Integer key:doc.getFrequency_table().keySet()) {
-                        double idf = Math.log(doc_len / terms_count_all_docs[key]);
-                        double tf = doc.calculateTermFrequency(key);
-                        record.put("term", Document.id_token_vocabulary.get(key));
-                        record.put("doc", doc.getTitle());
-                        record.put("value", tf*idf);
-                        writer.write(record);
-                    }
-                    doc_avgduration = doc_avgduration.plus(
-                            Duration.between(doc_start, Instant.now())
-                                    .minus(doc_avgduration).dividedBy(n));
-                    ++n;
-                }
-            } catch(IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            List<Document> documentList = getDocumentList();
+            output.println("Vocabulary Size: " + Document.vocab_size);
+            output.println("Number of Documents: " + documentList.size());
+
+            double[] terms_count_all_docs = getTerms_count_all_docs(documentList);
+            doc_avgduration = process(documentList, terms_count_all_docs);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -124,5 +68,74 @@ public class SerialMain {
         output.println("Total Time in milliseconds: " + d.toMillis());
         output.println("Total Time in seconds: " + d.toSeconds());
         output.println("Total Time in minutes: " + d.toMinutes());
+    }
+    private static void load_stop_words() {
+        try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path))) {
+            Document.stopwords.addAll(Arrays.stream(reader.readLine().split(",")).toList());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<Document> getDocumentList() throws IOException {
+        try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
+            return lines
+                    .map(line -> {
+                        String [] cells = line.split("\",\"");
+                        return new Document(cells[1], cells[2]);
+                    }).collect(Collectors.toList());
+        }
+    }
+
+    private static double[] getTerms_count_all_docs(List<Document> documentList) {
+        double[] terms_count_all_docs = new double[Document.vocab_size];
+        for (Document document : documentList) {
+            for (Integer key : document.getFrequency_table().keySet()) {
+                terms_count_all_docs[key] += 1;
+            }
+        }
+        return terms_count_all_docs;
+    }
+    public static Duration process(List<Document> documentList, double[] terms_count_all_docs) throws IOException {
+        Duration doc_avgduration = Duration.ZERO;
+        Configuration conf = new Configuration();
+        Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
+        OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
+        int doc_len = documentList.size();
+        try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
+                <GenericData.Record>builder(out)
+                .withPageSize(ParquetWriter.DEFAULT_PAGE_SIZE)
+                .withSchema(schema_tfidf)
+                .withConf(conf)
+                .withCompressionCodec(CompressionCodecName.SNAPPY)
+                .withValidation(false)
+                .withDictionaryEncoding(true)
+                .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
+                .build()) {
+            GenericData.Record record = new GenericData.Record(schema_tfidf);
+            long n = 1;
+            Instant doc_start;
+            for (Document doc:documentList) {
+                doc_start = Instant.now();
+                processDocument(terms_count_all_docs, doc_len, writer, record, doc);
+                doc_avgduration = doc_avgduration.plus(
+                        Duration.between(doc_start, Instant.now())
+                                .minus(doc_avgduration).dividedBy(n));
+                ++n;
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        return doc_avgduration;
+    }
+    private static void processDocument(double[] terms_count_all_docs, int doc_len, ParquetWriter<GenericData.Record> writer, GenericData.Record record, Document doc) throws IOException {
+        for (Integer key: doc.getFrequency_table().keySet()) {
+            double idf = Math.log(doc_len / terms_count_all_docs[key]);
+            double tf = doc.calculateTermFrequency(key);
+            record.put("term", Document.id_token_vocabulary.get(key));
+            record.put("doc", doc.getTitle());
+            record.put("value", tf*idf);
+            writer.write(record);
+        }
     }
 }
