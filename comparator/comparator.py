@@ -3,7 +3,7 @@
 import sys
 import pandas as pd
 
-FILENAME='devel_10_000'
+FILENAME='devel_100_000'
 
 
 def calcular_speedup(serial_time:int, concurrent_time:int):
@@ -29,8 +29,8 @@ def main():
     concurrent.reset_index(drop=True, inplace=True)
 
     result_comparisson = serial.equals(concurrent)
-    print(f"Os resultados da versão seria e da versão concorrente \
-    são equivalentes no arquivo {FILENAME}?", result_comparisson)
+    print("Os resultados da versão seria e da versão concorrente" \
+    f"são equivalentes no arquivo {FILENAME}?", result_comparisson)
 
     del serial
     del concurrent

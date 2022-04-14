@@ -23,31 +23,34 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ConcurrentMain {
-    static public String filename = "devel_10_000";
+    static private final String stop_words_path = "datasets/stopwords.txt";
+    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+    static private final String filename = "devel_100_000";
+    static private final String input_path = "datasets/"+filename+".csv";
+    static private final String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
+    static private final String log_output = "logs_concurrent/output_"+filename+".log";
     public static void main(String[] args) throws FileNotFoundException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) {/*Descarta o log*/}
         }));
-        PrintStream out = new PrintStream(new OutputStream() {
-            final FileOutputStream f = new FileOutputStream("logs_concurrent/output_"+filename+".log");
+        run();
+    }
+
+    public static void run() throws FileNotFoundException {
+        PrintStream output = new PrintStream(new OutputStream() {
+            final FileOutputStream f = new FileOutputStream(log_output);
             @Override
             public void write(int b) throws IOException {
                 f.write(b);
                 System.out.write(b);
             }
         });
-        run(out);
-    }
-
-    public static void run(PrintStream output) {
         List<ConcurrentDocument> documentList;
-        String input_path = "datasets/"+filename+".csv";
-        String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
+
         Duration doc_avgduration = Duration.ZERO;
         Instant start = Instant.now();
-        try(BufferedReader reader = new BufferedReader(new FileReader("datasets/stopwords.txt")))
+        try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path)))
         {
             ConcurrentDocument.stopwords.addAll(Arrays.stream(reader.readLine().split(",")).toList());
 
@@ -56,7 +59,6 @@ public class ConcurrentMain {
         }
         try {
             Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-
             try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
                 documentList = lines.parallel()
                         .map(line -> {
@@ -64,18 +66,15 @@ public class ConcurrentMain {
                             return new ConcurrentDocument(cells[1], cells[2]);
                         }).collect(Collectors.toList());
             }
-
             double[] terms_count_all_docs = new double[ConcurrentDocument.vocab_size];
             int doc_len = documentList.size();
             output.println("Vocabulary Size: " + ConcurrentDocument.vocab_size);
             output.println("Number of Documents: " + doc_len);
-
             for (ConcurrentDocument concurrentDocument : documentList) {
                 for (Integer key : concurrentDocument.getFrequency_table().keySet()) {
                     terms_count_all_docs[key] += 1;
                 }
             }
-
             Configuration conf = new Configuration();
             OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.

@@ -23,59 +23,61 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
 public class SerialMain {
-    static public String filename = "devel_10_000";
+    static private final String stop_words_path = "datasets/stopwords.txt";
+    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+    static private final String filename = "devel_100_000";
+    static private final String input_path = "datasets/"+filename+".csv";
+    static private final String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
+    static private final String log_output = "logs_serial/output_"+filename+".log";
     public static void main(String[] args) throws FileNotFoundException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) {/*Descarta o log*/}
         }));
-        PrintStream out = new PrintStream(new OutputStream() {
-            final FileOutputStream f = new FileOutputStream("logs_serial/output_"+filename+".log");
+        run();
+    }
+
+    public static void run() throws FileNotFoundException {
+        PrintStream output = new PrintStream(new OutputStream() {
+            final FileOutputStream f = new FileOutputStream(log_output);
             @Override
             public void write(int b) throws IOException {
                 f.write(b);
                 System.out.write(b);
             }
         });
-        run(out);
-    }
-
-    public static void run(PrintStream output) {
-
         List<Document> documentList;
-        String input_path = "datasets/"+filename+".csv";
-        String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
         Duration doc_avgduration = Duration.ZERO;
         Instant start = Instant.now();
-        try(BufferedReader reader = new BufferedReader(new FileReader("datasets/stopwords.txt")))
+        try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path)))
         {
             Document.stopwords.addAll(Arrays.stream(reader.readLine().split(",")).toList());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+        try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
+            documentList = lines
+                    .map(line -> {
+                        String [] cells = line.split("\",\"");
+                        return new Document(cells[1], cells[2]);
+                    }).collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        double[] terms_count_all_docs = new double[Document.vocab_size];
+        int doc_len = documentList.size();
+        output.println("Vocabulary Size: " + Document.vocab_size);
+        output.println("Number of Documents: " + doc_len);
+        for (Document document : documentList) {
+            for (Integer key : document.getFrequency_table().keySet()) {
+                terms_count_all_docs[key] += 1;
+            }
+        }
+        Configuration conf = new Configuration();
         try {
             Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
-            try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
-                documentList = lines
-                        .map(line -> {
-                            String [] cells = line.split("\",\"");
-                            return new Document(cells[1], cells[2]);
-                        }).collect(Collectors.toList());
-            }
-
-            double[] terms_count_all_docs = new double[Document.vocab_size];
-            int doc_len = documentList.size();
-            output.println("Vocabulary Size: " + Document.vocab_size);
-            output.println("Number of Documents: " + doc_len);
-            for (Document document : documentList) {
-                for (Integer key : document.getFrequency_table().keySet()) {
-                    terms_count_all_docs[key] += 1;
-                }
-            }
-
-            Configuration conf = new Configuration();
             OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
             try (ParquetWriter<GenericData.Record> writer = AvroParquetWriter.
                     <GenericData.Record>builder(out)
@@ -108,8 +110,10 @@ public class SerialMain {
             } catch(IOException e) {
                 e.printStackTrace();
             }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         output.println("Avg Time per Document in nanoseconds: " + doc_avgduration.toNanos());
         output.println("Avg Time per Document in milliseconds: " + doc_avgduration.toMillis());
