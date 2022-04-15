@@ -25,7 +25,7 @@ import org.apache.parquet.io.OutputFile;
 public class SerialMain {
     static private final String stop_words_path = "datasets/stopwords.txt";
     static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private final String filename = "devel_100_000";
+    static private final String filename = "test_id";
     static private final String input_path = "datasets/"+filename+".csv";
     static private final String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
     static private final String log_output = "logs_serial/output_"+filename+".log";
@@ -48,21 +48,16 @@ public class SerialMain {
         });
         Instant start = Instant.now();
         load_stop_words();
-        Duration doc_avgduration;
         try {
             List<Document> documentList = getDocumentList();
             output.println("Vocabulary Size: " + Document.vocab_size);
             output.println("Number of Documents: " + documentList.size());
 
             double[] terms_count_all_docs = getTerms_count_all_docs(documentList);
-            doc_avgduration = process(documentList, terms_count_all_docs);
+            process(documentList, terms_count_all_docs);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        output.println("Avg Time per Document in nanoseconds: " + doc_avgduration.toNanos());
-        output.println("Avg Time per Document in milliseconds: " + doc_avgduration.toMillis());
-        output.println("Avg Time per Document in seconds: " + doc_avgduration.toSeconds());
-        output.println("Avg Time per Document in minutes: " + doc_avgduration.toMinutes());
         Duration d = Duration.between(start, Instant.now());
         output.println("Total Time in nanoseconds: " + d.toNanos());
         output.println("Total Time in milliseconds: " + d.toMillis());
@@ -79,10 +74,11 @@ public class SerialMain {
 
     private static List<Document> getDocumentList() throws IOException {
         try (Stream<String> lines = Files.lines(Paths.get(input_path))) {
-            return lines
+            return lines.sequential()
                     .map(line -> {
                         String [] cells = line.split("\",\"");
-                        return new Document(cells[1], cells[2]);
+                        return new Document(Integer.parseInt(
+                                cells[0].replaceFirst("\"", "")), cells[1], cells[2]);
                     }).collect(Collectors.toList());
         }
     }
@@ -96,8 +92,7 @@ public class SerialMain {
         }
         return terms_count_all_docs;
     }
-    public static Duration process(List<Document> documentList, double[] terms_count_all_docs) throws IOException {
-        Duration doc_avgduration = Duration.ZERO;
+    public static void process(List<Document> documentList, double[] terms_count_all_docs) throws IOException {
         Configuration conf = new Configuration();
         Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
         OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
@@ -113,23 +108,19 @@ public class SerialMain {
                 .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
                 .build()) {
             GenericData.Record record = new GenericData.Record(schema_tfidf);
-            long n = 1;
-            Instant doc_start;
             for (Document doc:documentList) {
-                doc_start = Instant.now();
-                record.put("doc", doc.getTitle());
+                record.put("doc", doc.getId());
                 processDocument(terms_count_all_docs, doc_len, writer, record, doc);
-                doc_avgduration = doc_avgduration.plus(
-                        Duration.between(doc_start, Instant.now())
-                                .minus(doc_avgduration).dividedBy(n));
-                ++n;
             }
         } catch(IOException e) {
             e.printStackTrace();
         }
-        return doc_avgduration;
     }
-    private static void processDocument(double[] terms_count_all_docs, int doc_len, ParquetWriter<GenericData.Record> writer, GenericData.Record record, Document doc) throws IOException {
+    private static void processDocument(double[] terms_count_all_docs,
+                                        int doc_len,
+                                        ParquetWriter<GenericData.Record> writer,
+                                        GenericData.Record record,
+                                        Document doc) throws IOException {
         for (Integer key: doc.getFrequency_table().keySet()) {
             double idf = Math.log(doc_len / terms_count_all_docs[key]);
             double tf = doc.calculateTermFrequency(key);

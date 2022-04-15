@@ -16,12 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,7 +25,7 @@ import java.util.stream.Stream;
 public class ConcurrentMain {
     static private final String stop_words_path = "datasets/stopwords.txt";
     static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private final String filename = "devel_100_000";
+    static private final String filename = "test_id";
     static private final String input_path = "datasets/"+filename+".csv";
     static private final String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
     static private final String log_output = "logs_concurrent/output_"+filename+".log";
@@ -52,21 +48,16 @@ public class ConcurrentMain {
         });
         Instant start = Instant.now();
         load_stop_words();
-        Duration doc_avgduration;
         try {
             List<ConcurrentDocument> documentList = getDocumentList();
             output.println("Vocabulary Size: " + ConcurrentDocument.vocab_size);
             output.println("Number of Documents: " + documentList.size());
 
             double[] terms_count_all_docs = getTerms_count_all_docs(documentList);
-            doc_avgduration = process(documentList, terms_count_all_docs);
-        } catch (IOException e) {
+            process(documentList, terms_count_all_docs);
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-        output.println("Avg Time per Document in nanoseconds: " + doc_avgduration.toNanos());
-        output.println("Avg Time per Document in milliseconds: " + doc_avgduration.toMillis());
-        output.println("Avg Time per Document in seconds: " + doc_avgduration.toSeconds());
-        output.println("Avg Time per Document in minutes: " + doc_avgduration.toMinutes());
         Duration d = Duration.between(start, Instant.now());
         output.println("Total Time in nanoseconds: " + d.toNanos());
         output.println("Total Time in milliseconds: " + d.toMillis());
@@ -86,7 +77,8 @@ public class ConcurrentMain {
             return lines.parallel()
                     .map(line -> {
                         String [] cells = line.split("\",\"");
-                        return new ConcurrentDocument(cells[1], cells[2]);
+                        return new ConcurrentDocument(Integer.parseInt(
+                                cells[0].replaceFirst("\"", "")), cells[1], cells[2]);
                     }).collect(Collectors.toList());
         }
     }
@@ -103,46 +95,31 @@ public class ConcurrentMain {
         });
         return terms_count_all_docs;
     }
-    public static Duration process(List<ConcurrentDocument> documentList, double[] terms_count_all_docs) throws IOException {
-        Optional<Duration> doc_avgduration = Optional.of(Duration.ZERO);
+    public static void process(List<ConcurrentDocument> documentList, double[] terms_count_all_docs) throws IOException, InterruptedException {
         Schema schema_tfidf = new Schema.Parser().parse(new FileInputStream(tfidf_schema_path));
         int doc_len = documentList.size();
-        //
-        BlockingQueue<GenericData.Record> buffer = new LinkedBlockingQueue<>(doc_len);
-
-        GenericData.Record record = new GenericData.Record(schema_tfidf);
-        AtomicLong n = new AtomicLong(0);
-        doc_avgduration = documentList.parallelStream().map(concurrentDocument -> {
-            Instant doc_start = Instant.now();
-            record.put("doc", concurrentDocument.getTitle());
-            try {
-                processDocument(terms_count_all_docs, doc_len, record, concurrentDocument, buffer);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return Duration.between(doc_start, Instant.now());
-        }).reduce((duration, duration2) ->
-                duration.plus(duration2.minus(duration).
-                        dividedBy(n.incrementAndGet())));
-        if (doc_avgduration.isPresent())
-            return doc_avgduration.get();
-        else {
-            throw new RuntimeException();
-        }
+        Buffer<Data> buffer = new Buffer<>(1000);
+        Data end = new Data(null, 0, 0.0);
+        RecordConsumer rc = new RecordConsumer(tfidf_out_fileName, schema_tfidf, end, buffer);
+        Thread thread = new Thread(rc);
+        thread.start();
+        documentList.parallelStream().forEach(concurrentDocument ->
+                processDocument(terms_count_all_docs,
+                        doc_len, concurrentDocument, buffer));
+        buffer.add(end);
+        thread.join();
     }
     private static void processDocument(double[] terms_count_all_docs,
                                         int doc_len,
-                                        GenericData.Record record_orig,
                                         ConcurrentDocument doc,
-                                        BlockingQueue<GenericData.Record> buffer) throws IOException {
+                                        Buffer<Data> buffer) {
         for (Integer key: doc.getFrequency_table().keySet()) {
             double idf = Math.log(doc_len / terms_count_all_docs[key]);
             double tf = doc.calculateTermFrequency(key);
-            GenericData.Record record = new GenericData.Record(record_orig, false);
-            record.put("term", ConcurrentDocument.id_token_vocabulary.get(key));
-            record.put("value", tf*idf);
+            Data data = new Data(ConcurrentDocument.id_token_vocabulary.get(key),
+                    doc.getId(), tf*idf);
             try {
-                buffer.put(record);
+                buffer.add(data);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

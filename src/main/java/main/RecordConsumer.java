@@ -13,15 +13,23 @@ import org.apache.parquet.io.OutputFile;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 public class RecordConsumer implements Runnable {
     private final ParquetWriter<GenericData.Record> writer;
-    private final BlockingQueue<GenericData.Record> buffer;
+    private final Buffer<Data> buffer;
+    private final Data end;
+
+    private final GenericData.Record record;
+
 
     public RecordConsumer(String tfidf_out_fileName,
                           Schema schema_tfidf,
-                          BlockingQueue<GenericData.Record> buffer) throws IOException {
+                          Data end,
+                          Buffer<Data> buffer) throws IOException {
         Configuration conf = new Configuration();
+        this.buffer = buffer;
         OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
         writer = AvroParquetWriter.
                 <GenericData.Record>builder(out)
@@ -33,17 +41,28 @@ public class RecordConsumer implements Runnable {
                 .withDictionaryEncoding(true)
                 .withWriteMode(ParquetFileWriter.Mode.OVERWRITE)
                 .build();
-        this.buffer = buffer;
+        this.end = end;
+        this.record = new GenericData.Record(schema_tfidf);
     }
 
     @Override
     public void run() {
-        try {
-            writer.write(buffer.take());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        while (true) {
+            try {
+                Data data = buffer.poll();
+                record.put("term", data.term());
+                record.put("doc", data.doc_id());
+                record.put("value", data.value());
+                if (data == end) {
+                    writer.close();
+                    return;
+                }
+                writer.write(record);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

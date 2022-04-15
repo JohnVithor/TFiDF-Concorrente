@@ -3,7 +3,7 @@
 import sys
 import pandas as pd
 
-FILENAME='devel_100_000'
+FILENAME='test_id'
 
 
 def calcular_speedup(serial_time:int, concurrent_time:int):
@@ -29,14 +29,21 @@ def main():
     concurrent.reset_index(drop=True, inplace=True)
 
     result_comparisson = serial.equals(concurrent)
-    print("Os resultados da versão seria e da versão concorrente" \
+    print("Os resultados da versão serial e da versão concorrente " \
     f"são equivalentes no arquivo {FILENAME}?", result_comparisson)
+
+    if not result_comparisson:
+        df_all = serial.merge(concurrent, on=['doc','term'],
+                   how='outer', indicator=True)
+        print(df_all[df_all['value_x'] != df_all['value_y']])
+        del serial
+        del concurrent
+        sys.exit()
+
+
 
     del serial
     del concurrent
-
-    if not result_comparisson:
-        sys.exit()
 
     with open(f"../logs_serial/output_{FILENAME}.log", encoding="UTF-8") as log_serial,\
     open(f"../logs_concurrent/output_{FILENAME}.log", encoding="UTF-8") as log_concurrent:
@@ -44,14 +51,14 @@ def main():
             ", é o mesmo?", log_serial.readline() == log_concurrent.readline())
         print(f"O número de documentos nas duas versões, considerando o arquivo {FILENAME}"\
             ", é o mesmo?", log_serial.readline() == log_concurrent.readline())
-        print("A diferença de tempo médio em nanosegundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em milisegundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em segundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em minutos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
+        # print("A diferença de tempo médio em nanosegundos de processamento de cada documento" \
+        # " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
+        # print("A diferença de tempo médio em milisegundos de processamento de cada documento" \
+        # " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
+        # print("A diferença de tempo médio em segundos de processamento de cada documento" \
+        # " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
+        # print("A diferença de tempo médio em minutos de processamento de cada documento" \
+        # " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
 
         serial_time = int(log_serial.readline().split(':')[1])
         concurrent_time = int(log_concurrent.readline().split(':')[1])
