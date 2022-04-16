@@ -25,7 +25,7 @@ import org.apache.parquet.io.OutputFile;
 public class SerialMain {
     static private final String stop_words_path = "datasets/stopwords.txt";
     static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private final String filename = "test_id";
+    static private final String filename = "train_id";
     static private final String input_path = "datasets/"+filename+".csv";
     static private final String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
     static private final String log_output = "logs_serial/output_"+filename+".log";

@@ -1,4 +1,4 @@
-package main;
+package simplified;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -12,17 +12,19 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import org.apache.parquet.io.OutputFile;
 
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RecordConsumer implements Runnable {
     private final ParquetWriter<GenericData.Record> writer;
-    private final Buffer<Data> buffer;
+    private final ConcurrentLinkedQueue<Data> buffer;
     private final Data end;
     private final GenericData.Record record;
 
     public RecordConsumer(String tfidf_out_fileName,
                           Schema schema_tfidf,
                           Data end,
-                          Buffer<Data> buffer) throws IOException {
+                          ConcurrentLinkedQueue<Data> buffer) throws IOException {
         Configuration conf = new Configuration();
         this.buffer = buffer;
         OutputFile out = HadoopOutputFile.fromPath(new Path(tfidf_out_fileName), conf);
@@ -44,18 +46,18 @@ public class RecordConsumer implements Runnable {
     public void run() {
         while (true) {
             try {
-                Data data = buffer.poll();
-                record.put("term", data.term());
-                record.put("doc", data.doc_id());
-                record.put("value", data.value());
-                if (data == end) {
-                    writer.close();
-                    return;
+                if (buffer.peek() != null) {
+                    Data data = buffer.poll();
+                    if (data == end) {
+                        writer.close();
+                        return;
+                    }
+                    record.put("term", data.term());
+                    record.put("doc", data.doc_id());
+                    record.put("value", data.value());
+                    writer.write(record);
                 }
-                writer.write(record);
             } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
