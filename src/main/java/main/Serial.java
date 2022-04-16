@@ -14,14 +14,25 @@ import java.util.stream.Stream;
 
 public class Serial {
     static private final String stop_words_path = "datasets/stopwords.txt";
-    static private final String filename = "test_id";
+    static private String filename = "test_id";
 //    static private final String filename = "devel_100_000_id";
-    static private final String input_path = "datasets/"+filename+".csv";
-    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private final String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
-    static private final String log_output = "logs_serial/output_"+filename+".log";
+    static private String input_path = "datasets/"+filename+".csv";
+    static private String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+    static private String tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
+    static private String log_output = "logs_serial/output_"+filename+".log";
 
     public static void main(String[] args) throws IOException {
+        System.setErr(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+
+            }
+        }));
+        filename = args[0];
+        input_path = "datasets/"+filename+".csv";
+        tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+        tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
+        log_output = "logs_serial/output_"+filename+".log";
         Instant start = Instant.now();
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
 
@@ -46,7 +57,8 @@ public class Serial {
         try(Stream<String> lines = Files.lines(Path.of(input_path))) {
             docs = lines
                     .sequential()
-                    .map(line -> Utils.createDocument(line, stopwords)).toList();
+                    .map(line -> Utils.createDocument(line, stopwords))
+                    .toList();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -63,7 +75,7 @@ public class Serial {
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
 
-        docs.stream().sequential().forEach(doc -> {
+        for (Utils.Document doc:docs) {
             for (String key: doc.counts().keySet()) {
                 double idf = Math.log( n_docs / (double) count.get(key));
                 double tf = doc.counts().get(key) / (double) doc.n_terms();
@@ -74,7 +86,7 @@ public class Serial {
                     throw new RuntimeException(e);
                 }
             }
-        });
+        }
         myWriter.close();
     }
 }

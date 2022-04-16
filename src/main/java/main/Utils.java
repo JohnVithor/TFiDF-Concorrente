@@ -38,8 +38,10 @@ public class Utils {
         String text = cells[2].substring(0, cells[2].length() - 1).toLowerCase();
         Map<String, Long> counts =
                 Arrays.stream(text.replaceAll("[^a-zA-Z\\d ]", "")
-                                .split("\\s+")).sequential()
+                                .split("\\s+"))
+                        .sequential()
                         .filter(e -> !stopwords.contains(e))
+                        .sequential()
                         .collect(Collectors.groupingBy(e -> e,
                                 Collectors.counting()));
         return new Document(id, counts, counts.values().stream()

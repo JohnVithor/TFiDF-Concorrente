@@ -44,6 +44,11 @@
             <artifactId>jmh-core</artifactId>
             <version>1.35</version>
         </dependency>
+        <dependency>
+            <groupId>net.intelie.tinymap</groupId>
+            <artifactId>tinymap</artifactId>
+            <version>0.9</version>
+        </dependency>
     </dependencies>
 
 </project>

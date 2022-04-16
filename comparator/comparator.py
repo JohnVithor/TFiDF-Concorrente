@@ -3,7 +3,7 @@
 import sys
 import pandas as pd
 
-FILENAME='devel_100_000_id'
+FILENAME='test_id'
 
 
 def calcular_speedup(serial_time:int, concurrent_time:int):

@@ -13,14 +13,25 @@ import java.util.stream.Stream;
 
 public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
-    static private final String filename = "test_id";
+    private static String filename = "test_id";
 //    static private final String filename = "devel_100_000_id";
-    static private final String input_path = "datasets/"+filename+".csv";
-    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private final String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
-    static private final String log_output = "logs_concurrent/output_"+filename+".log";
+    static private String input_path = "datasets/"+filename+".csv";
+    static private String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+    static private String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
+    static private String log_output = "logs_concurrent/output_"+filename+".log";
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        System.setErr(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+
+            }
+        }));
+        filename = args[0];
+        input_path = "datasets/"+filename+".csv";
+        tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+        tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
+        log_output = "logs_concurrent/output_"+filename+".log";
         Instant start = Instant.now();
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
 
@@ -46,7 +57,8 @@ public class Concurrent {
         try(Stream<String> lines = Files.lines(Path.of(input_path))) {
             docs = lines
                     .parallel()
-                    .map(line -> Utils.createDocument(line, stopwords)).toList();
+                    .map(line -> Utils.createDocument(line, stopwords))
+                    .toList();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -70,14 +82,13 @@ public class Concurrent {
         Thread consumer = new Thread(recordConsumer);
         consumer.start();
 
-        docs.stream().parallel().forEach(doc -> {
-            for (String key: doc.counts().keySet()) {
+        docs.parallelStream().forEach(doc ->
+            doc.counts().keySet().parallelStream().forEach(key -> {
                 double idf = Math.log( n_docs / (double) count.get(key));
                 double tf = doc.counts().get(key) / (double) doc.n_terms();
                 Data data = new Data(key, doc.id(), tf*idf);
                 buffer.add(data);
-            }
-        });
+        }));
         buffer.add(end);
         consumer.join();
     }
