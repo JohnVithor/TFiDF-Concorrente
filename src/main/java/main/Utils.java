@@ -21,16 +21,6 @@ public class Utils {
         return result;
     }
 
-    public static Map<String, Long> computeTermDocFreq(List<Document> docs) {
-        Map<String, Long> count = new HashMap<>();
-        for (Document doc : docs) {
-            for (String term: doc.counts().keySet()) {
-                count.put(term, count.getOrDefault(term, 0L) + 1);
-            }
-        }
-        return count;
-    }
-
     public static Document createDocument(String line, Set<String> stopwords) {
         String[] cells = line.split("\",\"");
         int id = Integer.parseInt(cells[0].replaceFirst("\"", ""));
@@ -41,7 +31,6 @@ public class Utils {
                                 .split("\\s+"))
                         .sequential()
                         .filter(e -> !stopwords.contains(e))
-                        .sequential()
                         .collect(Collectors.groupingBy(e -> e,
                                 Collectors.counting()));
         return new Document(id, counts, counts.values().stream()
