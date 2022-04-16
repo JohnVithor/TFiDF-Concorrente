@@ -9,8 +9,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Concurrent {
@@ -62,7 +60,6 @@ public class Concurrent {
 
         Data end = new Data(null,0,0.0);
         ConcurrentLinkedQueue<Data> buffer = new ConcurrentLinkedQueue<>();
-//        Buffer<Data> buffer = new Buffer<>(10);
 
         RecordConsumer recordConsumer = new RecordConsumer(
                 tfidf_out_fileName,
