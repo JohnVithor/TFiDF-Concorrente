@@ -1,6 +1,5 @@
-package simplified;
+package main;
 
-import main.Document;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.conf.Configuration;
