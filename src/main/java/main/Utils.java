@@ -1,5 +1,7 @@
 package main;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -13,8 +15,10 @@ public class Utils {
     public static Set<String> load_stop_words(String stop_words_path) {
         Set<String> result = null;
         try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path))) {
-            result = Arrays.stream(reader.readLine().
-                    split(",")).collect(Collectors.toUnmodifiableSet());
+            result = Arrays.stream(
+                    StringUtils.split(reader.readLine(),',')
+                    ).collect(Collectors.toUnmodifiableSet()
+                    );
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -22,18 +26,35 @@ public class Utils {
     }
 
     public static Document createDocument(String line, Set<String> stopwords) {
-        String[] cells = line.split("\",\"");
-        int id = Integer.parseInt(cells[0].replaceFirst("\"", ""));
-        String title = cells[1];
-        String text = cells[2].substring(0, cells[2].length() - 1).toLowerCase();
+        int pos = 0, end;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        int id = Integer.parseInt(StringUtils.substring(line, pos, end).replaceFirst("\"", ""));
+        pos = end + 1;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        String title = StringUtils.substring(line, pos, end);
+        pos = end + 1;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        String text = StringUtils.substring(line, pos, end);
+        text = Utils.normalize(StringUtils.lowerCase(StringUtils.chop(text)));
         Map<String, Long> counts =
-                Arrays.stream(text.replaceAll("[^a-zA-Z\\d ]", "")
-                                .split("\\s+"))
+                Arrays.stream(StringUtils.split(text,' '))
                         .sequential()
                         .filter(e -> !stopwords.contains(e))
                         .collect(Collectors.groupingBy(e -> e,
                                 Collectors.counting()));
         return new Document(id, counts, counts.values().stream()
                 .sequential().mapToLong(value -> value).sum());
+    }
+
+    public static String normalize(String source) {
+        StringBuilder result = new StringBuilder();
+        char one;
+        for (int i = 0; i < source.length(); ++i) {
+            one = source.charAt(i);
+            if (Character.isLetterOrDigit(one) || Character.isSpaceChar(one)) {
+                result.append(one);
+            }
+        }
+        return result.toString();
     }
 }
