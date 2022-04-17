@@ -27,15 +27,21 @@ public class Concurrent {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) throws IOException {
-
             }
         }));
         filename = args[0];
-        filename = "test_id";
         input_path = "datasets/" + filename + ".csv";
         tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
         tfidf_out_fileName = "results_concurrent/" + filename + "_tfidf_results.parquet";
         log_output = "logs_concurrent/output_" + filename + ".log";
+        PrintStream log = new PrintStream(new OutputStream() {
+            final FileOutputStream f = new FileOutputStream(log_output);
+            @Override
+            public void write(int b) throws IOException {
+                f.write(b);
+                System.out.write(b);
+            }
+        });
         Instant start = Instant.now();
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
         AtomicInteger n_docs = new AtomicInteger();
@@ -64,12 +70,15 @@ public class Concurrent {
             throw new RuntimeException(e);
         }
         Instant mid = Instant.now();
-        System.out.println(Duration.between(start, mid).toMillis());
+
+        log.println(Duration.between(start, mid).toMillis());
+        log.println(Duration.between(start, mid).toSeconds());
+        log.println(Duration.between(start, mid).toMinutes());
+
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
-
         try(Stream<String> lines = Files.lines(Path.of(input_path))) {
             lines
                     .sequential()
@@ -91,7 +100,13 @@ public class Concurrent {
         }
         myWriter.close();
         Instant end = Instant.now();
-        System.out.println(Duration.between(mid, end).toMillis());
-        System.out.println(Duration.between(start, end).toMillis());
+
+        log.println(Duration.between(mid, end).toMillis());
+        log.println(Duration.between(mid, end).toSeconds());
+        log.println(Duration.between(mid, end).toMinutes());
+
+        log.println(Duration.between(start, end).toMillis());
+        log.println(Duration.between(start, end).toSeconds());
+        log.println(Duration.between(start, end).toMinutes());
     }
 }

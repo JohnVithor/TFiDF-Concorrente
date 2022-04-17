@@ -32,11 +32,18 @@ public class Serial {
             }
         }));
         filename = args[0];
-        filename = "test_id";
         input_path = "datasets/"+filename+".csv";
         tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
         tfidf_out_fileName = "results_serial/" + filename+ "_tfidf_results.parquet";
         log_output = "logs_serial/output_"+filename+".log";
+        PrintStream log = new PrintStream(new OutputStream() {
+            final FileOutputStream f = new FileOutputStream(log_output);
+            @Override
+            public void write(int b) throws IOException {
+                f.write(b);
+                System.out.write(b);
+            }
+        });
         Instant start = Instant.now();
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
         AtomicInteger n_docs = new AtomicInteger();
@@ -65,7 +72,11 @@ public class Serial {
             throw new RuntimeException(e);
         }
         Instant mid = Instant.now();
-        System.out.println(Duration.between(start, mid).toMillis());
+
+        log.println(Duration.between(start, mid).toMillis());
+        log.println(Duration.between(start, mid).toSeconds());
+        log.println(Duration.between(start, mid).toMinutes());
+
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
@@ -92,7 +103,13 @@ public class Serial {
         }
         myWriter.close();
         Instant end = Instant.now();
-        System.out.println(Duration.between(mid, end).toMillis());
-        System.out.println(Duration.between(start, end).toMillis());
+
+        log.println(Duration.between(mid, end).toMillis());
+        log.println(Duration.between(mid, end).toSeconds());
+        log.println(Duration.between(mid, end).toMinutes());
+
+        log.println(Duration.between(start, end).toMillis());
+        log.println(Duration.between(start, end).toSeconds());
+        log.println(Duration.between(start, end).toMinutes());
     }
 }
