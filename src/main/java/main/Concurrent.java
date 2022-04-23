@@ -17,23 +17,18 @@ import java.util.stream.Stream;
 
 public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
-    private static String filename = "test_id";
-    static private String input_path = "datasets/"+filename+".csv";
-    static private String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-    static private String tfidf_out_fileName = "results_concurrent/" + filename+ "_tfidf_results.parquet";
-    static private String log_output = "logs_concurrent/output_"+filename+".log";
 
     public static void main(String[] args) throws IOException, InterruptedException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
-            public void write(int b) throws IOException {
+            public void write(int b) {
             }
         }));
-        filename = args[0];
-        input_path = "datasets/" + filename + ".csv";
-        tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        tfidf_out_fileName = "results_concurrent/" + filename + "_tfidf_results.parquet";
-        log_output = "logs_concurrent/output_" + filename + ".log";
+        String filename = args[0];
+        Path input_path = Path.of("datasets/" + filename + ".csv");
+        String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+        String tfidf_out_fileName = "results_concurrent/" + filename + "_tfidf_results.parquet";
+        String log_output = "logs_concurrent/output_" + filename + ".log";
         PrintStream log = new PrintStream(new OutputStream() {
             final FileOutputStream f = new FileOutputStream(log_output);
             @Override
@@ -46,7 +41,8 @@ public class Concurrent {
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
         AtomicInteger n_docs = new AtomicInteger();
         Map<String, Long> count;
-        try(Stream<String> lines = Files.lines(Path.of(input_path))) {
+
+        try(Stream<String> lines = Files.lines(input_path)) {
             count = lines
                     .parallel()
                     .map(line -> {
@@ -65,7 +61,7 @@ public class Concurrent {
                                 .collect(Collectors.toUnmodifiableSet());
                     })
                     .flatMap(Set::stream).collect(Collectors
-                            .groupingBy(token -> token, Collectors.counting()));;
+                            .groupingBy(token -> token, Collectors.counting()));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -79,8 +75,9 @@ public class Concurrent {
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
-        try(Stream<String> lines = Files.lines(Path.of(input_path))) {
+        try(Stream<String> lines = Files.lines(input_path)) {
             lines
+//                    .parallel()
                     .sequential()
                     .map(line -> Utils.createDocument(line, stopwords))
                     .forEach(doc -> {
