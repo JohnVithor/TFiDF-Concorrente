@@ -1,4 +1,4 @@
-package main;
+package main.optimized;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -56,5 +56,19 @@ public class Utils {
             }
         }
         return result.toString();
+    }
+    public static Set<String> setOfTerms(String line, Set<String> stopwords) {
+        int pos = 0, end;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        pos = end + 1;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        pos = end + 1;
+        end = StringUtils.indexOf(line,"\",\"", pos);
+        String text = StringUtils.substring(line, pos, end);
+        text = Utils.normalize(StringUtils.lowerCase(StringUtils.chop(text)));
+        return Arrays.stream(StringUtils.split(text,' '))
+                .sequential()
+                .filter(e -> !stopwords.contains(e))
+                .collect(Collectors.toUnmodifiableSet());
     }
 }

@@ -1,5 +1,7 @@
-package main;
+package main.optimized;
 
+import main.Data;
+import main.MyWriter;
 import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -21,8 +23,7 @@ public class Concurrent {
     public static void main(String[] args) throws IOException, InterruptedException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
-            public void write(int b) {
-            }
+            public void write(int b) {}
         }));
         String filename = args[0];
         Path input_path = Path.of("datasets/" + filename + ".csv");
@@ -45,21 +46,8 @@ public class Concurrent {
         try(Stream<String> lines = Files.lines(input_path)) {
             count = lines
                     .parallel()
-                    .map(line -> {
-                        n_docs.getAndIncrement();
-                        int pos = 0, end;
-                        end = StringUtils.indexOf(line,"\",\"", pos);
-                        pos = end + 1;
-                        end = StringUtils.indexOf(line,"\",\"", pos);
-                        pos = end + 1;
-                        end = StringUtils.indexOf(line,"\",\"", pos);
-                        String text = StringUtils.substring(line, pos, end);
-                        text = Utils.normalize(StringUtils.lowerCase(StringUtils.chop(text)));
-                        return Arrays.stream(StringUtils.split(text,' '))
-                                .sequential()
-                                .filter(e -> !stopwords.contains(e))
-                                .collect(Collectors.toUnmodifiableSet());
-                    })
+                    .peek(e -> n_docs.getAndIncrement())
+                    .map(line -> Utils.setOfTerms(line, stopwords))
                     .flatMap(Set::stream).collect(Collectors
                             .groupingBy(token -> token, Collectors.counting()));
         } catch (IOException e) {
