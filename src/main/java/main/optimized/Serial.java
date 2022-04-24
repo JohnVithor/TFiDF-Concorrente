@@ -3,7 +3,6 @@ package main.optimized;
 import main.Data;
 import main.MyWriter;
 import org.apache.avro.Schema;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
 
@@ -28,8 +27,8 @@ public class Serial {
         String filename = args[0];
         Path input_path = Path.of("datasets/" + filename + ".csv");
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "results_serial/" + filename + "_tfidf_results.parquet";
-        String log_output = "logs_serial/output_"+ filename +".log";
+        String tfidf_out_fileName = "serial_optimized/" + filename + "_tfidf_results.parquet";
+        String log_output = "serial_optimized/output_"+ filename +".log";
         PrintStream log = new PrintStream(new OutputStream() {
             final FileOutputStream f = new FileOutputStream(log_output);
             @Override
@@ -47,8 +46,10 @@ public class Serial {
                 .sequential()
                 .peek(e -> n_docs.getAndIncrement())
                 .map(line -> Utils.setOfTerms(line, stopwords))
-                .flatMap(Set::stream).collect(Collectors
-                    .groupingBy(token -> token, Collectors.counting()));
+                .flatMap(Set::stream)
+                .collect(Collectors.groupingBy(token -> token,
+                         Collectors.counting())
+                );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
