@@ -21,12 +21,9 @@ def main(path_one, path_two, name):
 
     one = vaex.open(f"{path_one}/{name}_tfidf_results.parquet")
 
-    one.sort(by=['doc', 'term'])
-
     two = vaex.open(f"{path_two}/{name}_tfidf_results.parquet")
-    two.sort(by=['doc', 'term'])
 
-    comparisson_data = one.compare(two)
+    comparisson_data = one.sort(by=['doc', 'term']).compare(two.sort(by=['doc', 'term']))
     result_comparisson = np.all([not l for l in comparisson_data])
     print("Os resultados dos dois arquivos são esquivalentes?", result_comparisson)
 
