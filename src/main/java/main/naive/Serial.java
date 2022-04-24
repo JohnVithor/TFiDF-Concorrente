@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,9 +25,7 @@ public class Serial {
     public static void main(String[] args) throws IOException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
-            public void write(int b) {
-
-            }
+            public void write(int b) {}
         }));
         String filename = args[0];
         Path input_path = Path.of("datasets/" + filename + ".csv");
@@ -46,8 +45,9 @@ public class Serial {
         int n_docs = 0;
         Map<String, Long> count = new HashMap<>();
         try(Stream<String> lines = Files.lines(input_path)) {
-            for (String line: lines.collect(Collectors.toUnmodifiableSet())) {
-                ++n_docs;
+            List<String> stringList = lines.toList();
+            n_docs = stringList.size();
+            for (String line: stringList) {
                 for (String term: Utils.setOfTerms(line, stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
                 }
@@ -55,6 +55,7 @@ public class Serial {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         Instant mid = Instant.now();
 
         log.println(Duration.between(start, mid).toMillis());
@@ -67,7 +68,7 @@ public class Serial {
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
 
         try(Stream<String> lines = Files.lines(input_path)) {
-            for (String line: lines.collect(Collectors.toUnmodifiableSet())) {
+            for (String line: lines.toList()) {
                 Utils.Document doc = Utils.createDocument(line, stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));

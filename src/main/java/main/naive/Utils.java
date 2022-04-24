@@ -3,9 +3,7 @@ package main.naive;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -30,18 +28,19 @@ public class Utils {
         int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
         text = Utils.normalize(text.toLowerCase());
-        Map<String, Long> counts =
-                Arrays.stream(text.split("\\s+"))
-                        .sequential()
-                        .filter(e -> !stopwords.contains(e))
-                        .collect(Collectors.groupingBy(e -> e,
-                                Collectors.counting()));
-        return new Document(id, counts, counts.values().stream()
-                .sequential().mapToLong(value -> value).sum());
+        String[] terms = text.split("\\s+");
+        Map<String, Long> counts = new HashMap<>();
+        int total = 0;
+        for (String term: terms) {
+            if(!stopwords.contains(term)) {
+                counts.put(term, counts.getOrDefault(term,0L) + 1);
+                total+=1;
+            }
+        }
+        return new Document(id, counts, total);
     }
 
     public static String normalize(String text) {
-//        return text;
         return text.replaceAll("[^\\p{L}\\d ]", "").trim();
     }
 
@@ -49,9 +48,13 @@ public class Utils {
         String [] splits = line.split("\";\"");
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
         text = Utils.normalize(text.toLowerCase());
-        return Arrays.stream(text.split("\\s+"))
-                .sequential()
-                .filter(e -> !stopwords.contains(e))
-                .collect(Collectors.toUnmodifiableSet());
+        String[] terms = text.split("\\s+");
+        Set<String> result = new HashSet<>();
+        for (String term: terms) {
+            if(!stopwords.contains(term)) {
+                result.add(term);
+            }
+        }
+        return result;
     }
 }

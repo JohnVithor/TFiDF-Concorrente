@@ -11,9 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,15 +42,42 @@ public class Concurrent {
         int n_docs = 0;
         Map<String, Long> count = new HashMap<>();
         try(Stream<String> lines = Files.lines(input_path)) {
-            for (String line: lines.collect(Collectors.toUnmodifiableSet())) {
-                ++n_docs;
-                for (String term: Utils.setOfTerms(line, stopwords)) {
+            List<String> stringList = lines.toList();
+            n_docs = stringList.size();
+            List<Thread> threads = new ArrayList<>();
+            List<Map<String, Long>> counts = new ArrayList<>();
+            int docs_per_thread = n_docs / Runtime.getRuntime().availableProcessors();
+            for (int i = 0; i < Runtime.getRuntime().availableProcessors()-1; ++i) {
+                Map<String, Long> count_i = new HashMap<>();
+                int finalI = i;
+                Thread t = new Thread(() -> {
+                    for (int j = finalI*docs_per_thread; j < (finalI+1)*docs_per_thread; j++) {
+                        for (String term: Utils.setOfTerms(stringList.get(j), stopwords)) {
+                            count_i.put(term, count_i.getOrDefault(term, 0L)+1L);
+                        }
+                    }
+                });
+                t.start();
+                threads.add(t);
+                counts.add(count_i);
+            }
+            for (int j = 3*docs_per_thread; j < n_docs; j++) {
+                for (String term: Utils.setOfTerms(stringList.get(j), stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
+                }
+            }
+            for (Thread t : threads) {
+                t.join();
+            }
+            for (Map<String, Long> c : counts) {
+                for (Map.Entry<String, Long> pair : c.entrySet()) {
+                    count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         Instant mid = Instant.now();
 
         log.println(Duration.between(start, mid).toMillis());
@@ -65,7 +90,7 @@ public class Concurrent {
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
 
         try(Stream<String> lines = Files.lines(input_path)) {
-            for (String line: lines.collect(Collectors.toUnmodifiableSet())) {
+            for (String line: lines.toList()) {
                 Utils.Document doc = Utils.createDocument(line, stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));
