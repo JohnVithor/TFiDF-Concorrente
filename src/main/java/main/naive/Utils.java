@@ -7,9 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Utils {
-
     public record Document(int id, Map<String, Long> counts, long n_terms) {}
-
     public static Set<String> load_stop_words(String stop_words_path) {
         Set<String> result = null;
         try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path))) {
@@ -22,7 +20,6 @@ public class Utils {
         }
         return result;
     }
-
     public static Document createDocument(String line, Set<String> stopwords) {
         String[] splits = line.split("\";\"");
         int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
@@ -39,11 +36,9 @@ public class Utils {
         }
         return new Document(id, counts, total);
     }
-
     public static String normalize(String text) {
         return text.replaceAll("[^\\p{L}\\d ]", "").trim();
     }
-
     public static Set<String> setOfTerms(String line, Set<String> stopwords) {
         String [] splits = line.split("\";\"");
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);

@@ -1,7 +1,9 @@
 package main.naive;
 
 import main.Data;
+import main.ExecutionData;
 import main.MyWriter;
+import main.TFiDF;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
@@ -16,31 +18,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Concurrent {
+public class Concurrent implements TFiDF {
     static private final String stop_words_path = "datasets/stopwords.txt";
-
-    public static void main(String[] args) throws IOException, InterruptedException {
+    private Path input_path;
+    private String tfidf_schema_path;
+    private String tfidf_out_fileName;
+    private Set<String> stopwords;
+    private final Map<String, Long> count = new HashMap<>();
+    int n_docs = 0;
+    @Override
+    public void setup(String target) {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) {}
         }));
-        String filename = args[0];
-        Path input_path = Path.of("datasets/" + filename + ".csv");
-        String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "concurrent_naive/" + filename + "_tfidf_results.parquet";
-        String log_output = "concurrent_naive/output_" + filename + ".log";
-        PrintStream log = new PrintStream(new OutputStream() {
-            final FileOutputStream f = new FileOutputStream(log_output);
-            @Override
-            public void write(int b) throws IOException {
-                f.write(b);
-                System.out.write(b);
-            }
-        });
-        Instant start = Instant.now();
-        Set<String> stopwords = Utils.load_stop_words(stop_words_path);
-        int n_docs = 0;
-        Map<String, Long> count = new HashMap<>();
+        input_path = Path.of("datasets/" + target + ".csv");
+        tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+        tfidf_out_fileName = "concurrent_naive/" + target + "_tfidf_results.parquet";
+    }
+
+    @Override
+    public void firstHalf() throws InterruptedException {
+        stopwords = Utils.load_stop_words(stop_words_path);
         try(Stream<String> lines = Files.lines(input_path)) {
             List<String> stringList = lines.toList();
             n_docs = stringList.size();
@@ -77,13 +76,10 @@ public class Concurrent {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        Instant mid = Instant.now();
-
-        log.println(Duration.between(start, mid).toMillis());
-        log.println(Duration.between(start, mid).toSeconds());
-        log.println(Duration.between(start, mid).toMinutes());
-
+    @Override
+    public void secondHalfWriting() throws IOException {
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
@@ -107,14 +103,21 @@ public class Concurrent {
             throw new RuntimeException(e);
         }
         myWriter.close();
-        Instant end = Instant.now();
+    }
 
-        log.println(Duration.between(mid, end).toMillis());
-        log.println(Duration.between(mid, end).toSeconds());
-        log.println(Duration.between(mid, end).toMinutes());
-
-        log.println(Duration.between(start, end).toMillis());
-        log.println(Duration.between(start, end).toSeconds());
-        log.println(Duration.between(start, end).toMinutes());
+    @Override
+    public void secondHalfNotWriting() {
+        try(Stream<String> lines = Files.lines(input_path)) {
+            for (String line: lines.toList()) {
+                Utils.Document doc = Utils.createDocument(line, stopwords);
+                for (String key: doc.counts().keySet()) {
+                    double idf = Math.log(n_docs / (double) count.get(key));
+                    double tf = doc.counts().get(key) / (double) doc.n_terms();
+                    Data data = new Data(key, doc.id(), tf*idf);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

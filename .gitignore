@@ -1,6 +1,8 @@
 .idea/
 out/
 target/
+serial_naive/
+concurrent_naive/
 serial_optimized/
 concurrent_optimized/
 serial_nonoptimized/
