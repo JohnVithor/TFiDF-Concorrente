@@ -1,7 +1,7 @@
-package main.optimized;
+package jv.tfidf.optimized;
 
-import main.Data;
-import main.MyWriter;
+import jv.records.Data;
+import jv.MyWriter;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
@@ -16,10 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Concurrent {
+public class Serial {
     static private final String stop_words_path = "datasets/stopwords.txt";
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
             public void write(int b) {}
@@ -27,8 +27,8 @@ public class Concurrent {
         String filename = args[0];
         Path input_path = Path.of("datasets/" + filename + ".csv");
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "concurrent_optimized/" + filename + "_tfidf_results.parquet";
-        String log_output = "concurrent_optimized/output_" + filename + ".log";
+        String tfidf_out_fileName = "serial_optimized/" + filename + "_tfidf_results.parquet";
+        String log_output = "serial_optimized/output_"+ filename +".log";
         PrintStream log = new PrintStream(new OutputStream() {
             final FileOutputStream f = new FileOutputStream(log_output);
             @Override
@@ -41,16 +41,15 @@ public class Concurrent {
         Set<String> stopwords = Utils.load_stop_words(stop_words_path);
         AtomicInteger n_docs = new AtomicInteger();
         Map<String, Long> count;
-
         try(Stream<String> lines = Files.lines(input_path)) {
             count = lines
-                    .parallel()
-                    .peek(e -> n_docs.getAndIncrement())
-                    .map(line -> Utils.setOfTerms(line, stopwords))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.groupingBy(token -> token,
-                             Collectors.counting())
-                    );
+                .sequential()
+                .peek(e -> n_docs.getAndIncrement())
+                .map(line -> Utils.setOfTerms(line, stopwords))
+                .flatMap(Set::stream)
+                .collect(Collectors.groupingBy(token -> token,
+                         Collectors.counting())
+                );
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,23 +63,23 @@ public class Concurrent {
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
+
         try(Stream<String> lines = Files.lines(input_path)) {
             lines
-//                    .parallel()
-                    .sequential()
-                    .map(line -> Utils.createDocument(line, stopwords))
-                    .forEach(doc -> {
-                        for (String key: doc.counts().keySet()) {
-                            double idf = Math.log(n_docs.get() / (double) count.get(key));
-                            double tf = doc.counts().get(key) / (double) doc.n_terms();
-                            Data data = new Data(key, doc.id(), tf*idf);
-                            try {
-                                myWriter.write(data);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
+                .sequential()
+                .map(line -> Utils.createDocument(line, stopwords))
+                .forEach(doc -> {
+                    for (String key: doc.counts().keySet()) {
+                        double idf = Math.log(n_docs.get() / (double) count.get(key));
+                        double tf = doc.counts().get(key) / (double) doc.n_terms();
+                        Data data = new Data(key, doc.id(), tf*idf);
+                        try {
+                            myWriter.write(data);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
-                    });
+                    }
+                });
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

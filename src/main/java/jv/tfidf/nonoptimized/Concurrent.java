@@ -1,7 +1,8 @@
-package main.nonoptimized;
+package jv.tfidf.nonoptimized;
 
-import main.Data;
-import main.MyWriter;
+import jv.records.Data;
+import jv.MyWriter;
+import jv.utils.StreamJavaUtil;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
@@ -39,7 +40,7 @@ public class Concurrent {
             }
         });
         Instant start = Instant.now();
-        Set<String> stopwords = Utils.load_stop_words(stop_words_path);
+        Set<String> stopwords = StreamJavaUtil.load_stop_words(stop_words_path);
         AtomicInteger n_docs = new AtomicInteger();
         Map<String, Long> count;
 
@@ -47,7 +48,7 @@ public class Concurrent {
             count = lines
                     .parallel()
                     .peek(e -> n_docs.getAndIncrement())
-                    .map(line -> Utils.setOfTerms(line, stopwords))
+                    .map(line -> StreamJavaUtil.setOfTerms(line, stopwords))
                     .flatMap(Set::stream).collect(Collectors
                             .groupingBy(token -> token, Collectors.counting()));
         } catch (IOException e) {
@@ -67,7 +68,7 @@ public class Concurrent {
             lines
 //                    .parallel()
                     .sequential()
-                    .map(line -> Utils.createDocument(line, stopwords))
+                    .map(line -> StreamJavaUtil.createDocument(line, stopwords))
                     .forEach(doc -> {
                         for (String key: doc.counts().keySet()) {
                             double idf = Math.log(n_docs.get() / (double) count.get(key));

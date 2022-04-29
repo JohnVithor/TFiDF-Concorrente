@@ -1,9 +1,8 @@
-package main.naive;
+package jv.tfidf.naive;
 
-import main.Data;
-import main.ExecutionData;
-import main.MyWriter;
-import main.TFiDF;
+import jv.records.Data;
+import jv.MyWriter;
+import jv.utils.ForEachJavaUtil;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.parquet.hadoop.util.HadoopOutputFile;
@@ -11,14 +10,10 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Concurrent implements TFiDF {
+public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
     private Path input_path;
     private String tfidf_schema_path;
@@ -26,7 +21,7 @@ public class Concurrent implements TFiDF {
     private Set<String> stopwords;
     private final Map<String, Long> count = new HashMap<>();
     int n_docs = 0;
-    @Override
+//    @Override
     public void setup(String target) {
         System.setErr(new PrintStream(new OutputStream() {
             @Override
@@ -37,9 +32,9 @@ public class Concurrent implements TFiDF {
         tfidf_out_fileName = "concurrent_naive/" + target + "_tfidf_results.parquet";
     }
 
-    @Override
+//    @Override
     public void firstHalf() throws InterruptedException {
-        stopwords = Utils.load_stop_words(stop_words_path);
+        stopwords = ForEachJavaUtil.load_stop_words(stop_words_path);
         try(Stream<String> lines = Files.lines(input_path)) {
             List<String> stringList = lines.toList();
             n_docs = stringList.size();
@@ -51,7 +46,7 @@ public class Concurrent implements TFiDF {
                 int finalI = i;
                 Thread t = new Thread(() -> {
                     for (int j = finalI*docs_per_thread; j < (finalI+1)*docs_per_thread; j++) {
-                        for (String term: Utils.setOfTerms(stringList.get(j), stopwords)) {
+                        for (String term: ForEachJavaUtil.setOfTerms(stringList.get(j), stopwords)) {
                             count_i.put(term, count_i.getOrDefault(term, 0L)+1L);
                         }
                     }
@@ -61,7 +56,7 @@ public class Concurrent implements TFiDF {
                 counts.add(count_i);
             }
             for (int j = 3*docs_per_thread; j < n_docs; j++) {
-                for (String term: Utils.setOfTerms(stringList.get(j), stopwords)) {
+                for (String term: ForEachJavaUtil.setOfTerms(stringList.get(j), stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
                 }
             }
@@ -78,7 +73,7 @@ public class Concurrent implements TFiDF {
         }
     }
 
-    @Override
+//    @Override
     public void secondHalfWriting() throws IOException {
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
@@ -87,7 +82,7 @@ public class Concurrent implements TFiDF {
 
         try(Stream<String> lines = Files.lines(input_path)) {
             for (String line: lines.toList()) {
-                Utils.Document doc = Utils.createDocument(line, stopwords);
+                ForEachJavaUtil.Document doc = ForEachJavaUtil.createDocument(line, stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
@@ -105,11 +100,11 @@ public class Concurrent implements TFiDF {
         myWriter.close();
     }
 
-    @Override
+//    @Override
     public void secondHalfNotWriting() {
         try(Stream<String> lines = Files.lines(input_path)) {
             for (String line: lines.toList()) {
-                Utils.Document doc = Utils.createDocument(line, stopwords);
+                ForEachJavaUtil.Document doc = ForEachJavaUtil.createDocument(line, stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
