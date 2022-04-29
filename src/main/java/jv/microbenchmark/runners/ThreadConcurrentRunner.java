@@ -2,6 +2,7 @@ package jv.microbenchmark.runners;
 
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Data;
+import jv.records.Document;
 import jv.utils.ForEachJavaUtil;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
@@ -12,14 +13,12 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class ThreadConcurrentRunner {
-
     @Fork(value = 1)
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
-        Set<String> stopwords = ForEachJavaUtil.load_stop_words(plan.stop_words_path);
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
         try(Stream<String> lines = Files.lines(plan.input_path)) {
@@ -33,7 +32,7 @@ public class ThreadConcurrentRunner {
                 int finalI = i;
                 Thread t = new Thread(() -> {
                     for (int j = finalI*docs_per_thread; j < (finalI+1)*docs_per_thread; j++) {
-                        for (String term: ForEachJavaUtil.setOfTerms(stringList.get(j), stopwords)) {
+                        for (String term: plan.util.setOfTerms(stringList.get(j), plan.stopwords)) {
                             count_i.put(term, count_i.getOrDefault(term, 0L)+1L);
                         }
                     }
@@ -43,7 +42,7 @@ public class ThreadConcurrentRunner {
                 counts.add(count_i);
             }
             for (int j = 3*docs_per_thread; j < n_docs; j++) {
-                for (String term: ForEachJavaUtil.setOfTerms(stringList.get(j), stopwords)) {
+                for (String term: plan.util.setOfTerms(stringList.get(j), plan.stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
                 }
             }
@@ -58,7 +57,6 @@ public class ThreadConcurrentRunner {
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-        blackhole.consume(stopwords);
         blackhole.consume(count);
         blackhole.consume(n_docs);
     }
@@ -77,7 +75,7 @@ public class ThreadConcurrentRunner {
                 int finalI = i;
                 Thread t = new Thread(() -> {
                     for (int j = finalI*docs_per_thread; j < (finalI+1)*docs_per_thread; j++) {
-                        ForEachJavaUtil.Document doc = ForEachJavaUtil.createDocument(stringList.get(j), plan.stopwords);
+                        Document doc = plan.util.createDocument(stringList.get(j), plan.stopwords);
                         for (String key: doc.counts().keySet()) {
                             double idf = Math.log(n_docs / (double) plan.count.get(key));
                             double tf = doc.counts().get(key) / (double) doc.n_terms();
@@ -90,7 +88,7 @@ public class ThreadConcurrentRunner {
                 threads.add(t);
             }
             for (int j = 3*docs_per_thread; j < n_docs; j++) {
-                ForEachJavaUtil.Document doc = ForEachJavaUtil.createDocument(stringList.get(j), plan.stopwords);
+                Document doc = plan.util.createDocument(stringList.get(j), plan.stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) plan.count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();

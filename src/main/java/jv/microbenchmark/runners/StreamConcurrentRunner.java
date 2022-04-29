@@ -14,21 +14,19 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StreamConcurrentRunner {
-
     @Fork(value = 1)
     @Measurement(iterations = 5)
     @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
-        Set<String> stopwords = jv.optimized.Utils.load_stop_words(plan.stop_words_path);
         AtomicInteger n_docs = new AtomicInteger(0);
         Map<String, Long> count;
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             count = lines
                     .parallel()
                     .peek(e -> n_docs.getAndIncrement())
-                    .map(line -> jv.optimized.Utils.setOfTerms(line, stopwords))
+                    .map(line -> plan.util.setOfTerms(line, plan.stopwords))
                     .flatMap(Set::stream)
                     .collect(Collectors.groupingBy(token -> token,
                             Collectors.counting())
@@ -36,7 +34,6 @@ public class StreamConcurrentRunner {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        blackhole.consume(stopwords);
         blackhole.consume(count);
         blackhole.consume(n_docs);
     }
@@ -49,7 +46,7 @@ public class StreamConcurrentRunner {
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             lines
                 .parallel()
-                .map(line -> jv.optimized.Utils.createDocument(line, plan.stopwords))
+                .map(line -> plan.util.createDocument(line, plan.stopwords))
                 .forEach(doc -> {
                     for (String key: doc.counts().keySet()) {
                         double idf = Math.log(plan.n_docs.get() / (double) plan.count.get(key));

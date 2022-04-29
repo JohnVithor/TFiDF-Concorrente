@@ -20,22 +20,20 @@ public class BasicSerialRunner {
     @Warmup(iterations = 5)
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    public void compute_df(ExecutionPlan plan, Blackhole blackhole) throws IOException {
-        Set<String> stopwords = plan.util.load_stop_words(plan.stop_words_path);
+    public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         long n_docs = 0L;
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             List<String> stringList = lines.toList();
             n_docs = stringList.size();
             for (String line: stringList) {
-                for (String term: plan.util.setOfTerms(line, stopwords)) {
+                for (String term: plan.util.setOfTerms(line, plan.stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
                 }
             }
         } catch (IOException e) {
-            throw e;
+            throw new RuntimeException(e);
         }
-        blackhole.consume(stopwords);
         blackhole.consume(count);
         blackhole.consume(n_docs);
     }
