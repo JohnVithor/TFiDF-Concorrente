@@ -29,7 +29,10 @@ public class ExecutionPlan {
     public AtomicInteger n_docs = new AtomicInteger(0);
     public Path text_input = Path.of("datasets/devel_1_000_id.csv");
 
-    public Pattern pattern = Pattern.compile("[^\\p{L}\\d ]");
+    public final Pattern space_split = Pattern.compile("\\s+");
+    public final Pattern csv_split = Pattern.compile("\";\"");
+    public final Pattern normalize = Pattern.compile("[^\\p{L}\\d ]");
+
     @Setup(Level.Iteration)
     public void setUp() {
         input_path = Path.of("datasets/" + dataset + ".csv");

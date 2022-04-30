@@ -24,7 +24,7 @@ public class JavaStringRunner {
     public void normalizeCompiled(ExecutionPlan plan, Blackhole blackhole) {
         try(Stream<String> lines = Files.lines(plan.text_input)) {
             lines.forEach(line ->
-                blackhole.consume(plan.pattern.matcher(line).replaceAll("").trim())
+                blackhole.consume(plan.normalize.matcher(line).replaceAll("").trim())
             );
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -32,13 +32,29 @@ public class JavaStringRunner {
     }
 
     @Benchmark
-    public void split(ExecutionPlan plan, Blackhole blackhole) {
+    public void splitDefault(ExecutionPlan plan, Blackhole blackhole) {
         try(Stream<String> lines = Files.lines(plan.text_input)) {
             lines.forEach(line -> {
                 String[] splits = line.split("\";\"");
                 int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
                 String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
                 String[] terms = text.split("\\s+");
+                blackhole.consume(id);
+                blackhole.consume(terms);
+            });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Benchmark
+    public void splitCompiled(ExecutionPlan plan, Blackhole blackhole) {
+        try(Stream<String> lines = Files.lines(plan.text_input)) {
+            lines.forEach(line -> {
+                String[] splits = plan.csv_split.split(line);
+                int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
+                String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
+                String[] terms = plan.space_split.split(text);
                 blackhole.consume(id);
                 blackhole.consume(terms);
             });

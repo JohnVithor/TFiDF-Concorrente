@@ -3,7 +3,6 @@ package jv.microbenchmark.runners.tfidf;
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Data;
 import jv.records.Document;
-import jv.utils.ForEachJavaUtil;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 

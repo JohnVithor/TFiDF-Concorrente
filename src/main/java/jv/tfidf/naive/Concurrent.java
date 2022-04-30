@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
-
 public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
     public static void run(String target) throws IOException {

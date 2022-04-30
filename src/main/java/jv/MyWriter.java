@@ -13,8 +13,8 @@ import org.apache.parquet.io.OutputFile;
 import java.io.IOException;
 
 public class MyWriter {
-    private ParquetWriter<GenericData.Record> writer;
-    private GenericData.Record record;
+    private final ParquetWriter<GenericData.Record> writer;
+    private final GenericData.Record record;
 
     public MyWriter (OutputFile out, Schema schema) throws IOException {
         writer = AvroParquetWriter.
