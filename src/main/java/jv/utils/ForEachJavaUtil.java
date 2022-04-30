@@ -2,19 +2,20 @@ package jv.utils;
 
 import jv.records.Document;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class ForEachJavaUtil implements UtilInterface {
+    static private final Pattern space_split = Pattern.compile("\\s+");
+    static private final Pattern csv_split = Pattern.compile("\";\"");
+    static private final Pattern normalize = Pattern.compile("[^\\p{L}\\d ]");
+
     public Document createDocument(String line, Set<String> stopwords) {
-        String[] splits = line.split("\";\"");
+        String[] splits = csv_split.split(line);
         int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
         text = normalize(text.toLowerCase());
-        String[] terms = text.split("\\s+");
+        String[] terms = space_split.split(text);
         Map<String, Long> counts = new HashMap<>();
         int total = 0;
         for (String term: terms) {
@@ -26,13 +27,13 @@ public class ForEachJavaUtil implements UtilInterface {
         return new Document(id, counts, total);
     }
     public String normalize(String text) {
-        return text.replaceAll("[^\\p{L}\\d ]", "").trim();
+        return normalize.matcher(text).replaceAll("").trim();
     }
     public Set<String> setOfTerms(String line, Set<String> stopwords) {
-        String [] splits = line.split("\";\"");
+        String [] splits = csv_split.split(line);
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
         text = normalize(text.toLowerCase());
-        String[] terms = text.split("\\s+");
+        String[] terms = space_split.split(text);
         Set<String> result = new HashSet<>();
         for (String term: terms) {
             if(!stopwords.contains(term)) {

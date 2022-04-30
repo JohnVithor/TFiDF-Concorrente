@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners;
+package jv.microbenchmark.runners.tfidf;
 
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Data;
@@ -13,11 +13,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class ThreadConcurrentRunner {
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
@@ -60,11 +56,7 @@ public class ThreadConcurrentRunner {
         blackhole.consume(count);
         blackhole.consume(n_docs);
     }
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             List<String> stringList = lines.toList();

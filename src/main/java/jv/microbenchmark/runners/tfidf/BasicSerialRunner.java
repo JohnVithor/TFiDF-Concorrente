@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners;
+package jv.microbenchmark.runners.tfidf;
 
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Document;
@@ -11,15 +11,10 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public class BasicSerialRunner {
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         long n_docs = 0L;
@@ -37,11 +32,7 @@ public class BasicSerialRunner {
         blackhole.consume(count);
         blackhole.consume(n_docs);
     }
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             for (String line: lines.toList()) {

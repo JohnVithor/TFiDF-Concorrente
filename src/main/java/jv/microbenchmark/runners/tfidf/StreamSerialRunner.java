@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners;
+package jv.microbenchmark.runners.tfidf;
 
 import jv.microbenchmark.ExecutionPlan;
 import jv.utils.StreamJavaUtil;
@@ -15,11 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StreamSerialRunner {
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         AtomicInteger n_docs = new AtomicInteger();
         Map<String, Long> count;
@@ -36,11 +32,7 @@ public class StreamSerialRunner {
         blackhole.consume(count);
         blackhole.consume(n_docs.get());
     }
-    @Fork(value = 1)
-    @Measurement(iterations = 5)
-    @Warmup(iterations = 5)
     @Benchmark
-    @BenchmarkMode(Mode.Throughput)
     public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
         try(Stream<String> lines = Files.lines(plan.input_path)) {
             lines

@@ -10,14 +10,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @State(Scope.Benchmark)
 public class ExecutionPlan {
 //    @Param({"devel_1_000_id"})
-    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id"})
-    public String param;
+    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
+    public String dataset;
     @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
     public String stringManipulation;
     public UtilInterface util;
@@ -26,9 +27,12 @@ public class ExecutionPlan {
     public Set<String> stopwords;
     public Map<String, Long> count = new HashMap<>();
     public AtomicInteger n_docs = new AtomicInteger(0);
+    public Path text_input = Path.of("datasets/devel_1_000_id.csv");
+
+    public Pattern pattern = Pattern.compile("[^\\p{L}\\d ]");
     @Setup(Level.Iteration)
     public void setUp() {
-        input_path = Path.of("datasets/" + param + ".csv");
+        input_path = Path.of("datasets/" + dataset + ".csv");
         switch (stringManipulation) {
             case "foreach_java" -> util = new ForEachJavaUtil();
             case "foreach_apache" -> util = new ForEachApacheUtil();

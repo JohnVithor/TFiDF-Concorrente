@@ -1,5 +1,0 @@
-"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: param"
-"jv.microbenchmark.runners.ThreadConcurrentRunner.compute_df","thrpt",1,5,"45,110222","8,576241","ops/s",devel_1_000_id
-"jv.microbenchmark.runners.ThreadConcurrentRunner.compute_tfidf","thrpt",1,5,"51,895695","19,248282","ops/s",devel_1_000_id
-"jv.microbenchmark.runners.BasicSerialRunner.compute_df","thrpt",1,5,"26,597735","3,013311","ops/s",devel_1_000_id
-"jv.microbenchmark.runners.BasicSerialRunner.compute_tfidf","thrpt",1,5,"31,159331","2,504330","ops/s",devel_1_000_id
