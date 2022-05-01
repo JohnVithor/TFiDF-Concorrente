@@ -16,10 +16,13 @@ import java.util.stream.Stream;
 
 @State(Scope.Benchmark)
 public class ExecutionPlan {
-//    @Param({"devel_1_000_id"})
-    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
+//    @Param({"train_id"})
+//    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
+    @Param({"devel_100_000_id", "test_id", "train_id"})
     public String dataset;
-    @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
+//    @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
+    @Param({"foreach_java", "foreach_apache"})
+//    @Param({"foreach_apache"})
     public String stringManipulation;
     public UtilInterface util;
     public String stop_words_path = "datasets/stopwords.txt";
@@ -44,7 +47,7 @@ public class ExecutionPlan {
         }
 
         // preparação para a segunda etapa do algoritmo
-        UtilInterface util = new StreamApacheUtil();
+        UtilInterface util = new ForEachApacheUtil();
         stopwords = util.load_stop_words(stop_words_path);
         try(Stream<String> lines = Files.lines(input_path)) {
             count = lines

@@ -15,21 +15,21 @@ public class Microbenchmark {
         Options opt = new OptionsBuilder()
                 .include(BasicSerialRunner.class.getSimpleName())
                 .include(ThreadConcurrentRunner.class.getSimpleName())
-                .include(StreamSerialRunner.class.getSimpleName())
-                .include(StreamConcurrentRunner.class.getSimpleName())
+//                .include(StreamSerialRunner.class.getSimpleName())
+//                .include(StreamConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
-                .addProfiler(GCProfiler.class)
+//                .addProfiler(GCProfiler.class)
 //                .addProfiler(StackProfiler.class)
-                .warmupIterations(10)
+                .warmupIterations(5)
                 .measurementIterations(10)
                 .forks(1)
                 .jvmArgs("-server"
-//                        ,"-Xms2048m"
-//                        ,"-Xmx2048m"
+                        ,"-Xms2048m"
+                        ,"-Xmx2048m"
 //                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseZGC"
                 )
-                .result("all.csv")
+                .result("all2.csv")
                 .resultFormat(ResultFormatType.CSV)
                 .build();
         new Runner(opt).run();
