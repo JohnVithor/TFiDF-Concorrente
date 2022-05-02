@@ -1,0 +1,23 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: dataset","Param: stringManipulation"
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df","thrpt",1,10,"0,006104","0,000046","ops/s",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.alloc.rate","thrpt",1,10,"270,842940","2,097667","MB/sec",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.alloc.rate.norm","thrpt",1,10,"47390908951,200000","733907,681863","B/op",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Eden_Space","thrpt",1,10,"265,703046","2,057582","MB/sec",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"46491552972,800000","3152930,957230","B/op",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Old_Gen","thrpt",1,10,"0,216926","0,004957","MB/sec",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"37958451,200000","1002630,039141","B/op",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Survivor_Space","thrpt",1,10,"0,738892","0,007217","MB/sec",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"129289420,800000","1193368,444139","B/op",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.count","thrpt",1,10,"380,000000",NaN,"counts",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.time","thrpt",1,10,"33006,000000",NaN,"ms",train_id,foreach_java
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df","thrpt",1,10,"0,009601","0,000056","ops/s",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.alloc.rate","thrpt",1,10,"374,825173","2,230998","MB/sec",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.alloc.rate.norm","thrpt",1,10,"42124869413,600000","20786,742348","B/op",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Eden_Space","thrpt",1,10,"368,961971","2,172094","MB/sec",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"41465937920,000000","8487881,636161","B/op",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Old_Gen","thrpt",1,10,"0,335887","0,001999","MB/sec",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"37748736,000000","0,000000","B/op",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Survivor_Space","thrpt",1,10,"1,152746","0,016161","MB/sec",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"129551564,800000","1604991,176201","B/op",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.count","thrpt",1,10,"340,000000",NaN,"counts",train_id,foreach_apache
+"jv.microbenchmark.runners.tfidf.BasicSerialRunner.compute_df:·gc.time","thrpt",1,10,"30606,000000",NaN,"ms",train_id,foreach_apache

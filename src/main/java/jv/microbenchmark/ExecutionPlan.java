@@ -15,14 +15,14 @@ import java.util.regex.Pattern;
 
 @State(Scope.Benchmark)
 public class ExecutionPlan {
-    @Param({"devel_100_000_id"})
-//    @Param({"train_id"})
+//    @Param({"devel_100_000_id"})
+    @Param({"train_id"})
 //    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
 //    @Param({"devel_100_000_id", "train_id"})
     public String dataset;
 //    @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
     @Param({"foreach_java", "foreach_apache"})
-//    @Param({"foreach_apache"})
+//    @Param({"foreach_java"})
     public String stringManipulation;
     public UtilInterface util;
     public String stop_words_path = "datasets/stopwords.txt";
@@ -38,15 +38,6 @@ public class ExecutionPlan {
     @Setup(Level.Iteration)
     public void setUp() {
         input_path = Path.of("datasets/" + dataset + ".csv");
-        ObjectMapper objectMapper = new ObjectMapper();
-        MapType type = objectMapper.getTypeFactory().constructMapType(
-                Map.class, String.class, Long.class);
-        try {
-            count = objectMapper.readValue(new File(dataset+".json"), type);
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            System.exit(-1);
-        }
         switch (stringManipulation) {
             case "foreach_java" -> util = new ForEachJavaUtil();
             case "foreach_apache" -> util = new ForEachApacheUtil();
@@ -57,5 +48,15 @@ public class ExecutionPlan {
         // preparação para a segunda etapa do algoritmo
         UtilInterface util = new ForEachApacheUtil();
         stopwords = util.load_stop_words(stop_words_path);
+        ObjectMapper objectMapper = new ObjectMapper();
+        MapType type = objectMapper
+                .getTypeFactory()
+                .constructMapType(Map.class, String.class, Long.class);
+        try {
+            count = objectMapper.readValue(new File(dataset+".json"), type);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            System.exit(-1);
+        }
     }
 }
