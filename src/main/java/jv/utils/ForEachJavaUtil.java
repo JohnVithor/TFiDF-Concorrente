@@ -19,7 +19,7 @@ public class ForEachJavaUtil implements UtilInterface {
         Map<String, Long> counts = new HashMap<>();
         int total = 0;
         for (String term: terms) {
-            if(!stopwords.contains(term)) {
+            if(!stopwords.contains(term) && !term.isBlank()) {
                 counts.put(term, counts.getOrDefault(term,0L) + 1);
                 total+=1;
             }
@@ -36,7 +36,7 @@ public class ForEachJavaUtil implements UtilInterface {
         String[] terms = space_split.split(text);
         Set<String> result = new HashSet<>();
         for (String term: terms) {
-            if(!stopwords.contains(term)) {
+            if(!stopwords.contains(term) && !term.isBlank()) {
                 result.add(term);
             }
         }

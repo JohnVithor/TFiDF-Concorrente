@@ -19,7 +19,7 @@ public class ForEachApacheUtil implements UtilInterface {
         Map<String, Long> counts = new HashMap<>();
         int total = 0;
         for (String term: StringUtils.split(text,' ')) {
-            if(!stopwords.contains(term)) {
+            if(!stopwords.contains(term) && StringUtils.isNotBlank(term)) {
                 counts.put(term, counts.getOrDefault(term,0L) + 1);
                 total+=1;
             }
@@ -49,7 +49,7 @@ public class ForEachApacheUtil implements UtilInterface {
         text = normalize(StringUtils.lowerCase(StringUtils.chop(text)));
         Set<String> result = new HashSet<>();
         for (String term: StringUtils.split(text,' ')) {
-            if(!stopwords.contains(term)) {
+            if(!stopwords.contains(term) && StringUtils.isNotBlank(term)) {
                 result.add(term);
             }
         }

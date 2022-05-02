@@ -1,5 +1,6 @@
 package jv.microbenchmark.runners.tfidf;
 
+import jv.MyBuffer;
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Data;
 import jv.records.Document;
@@ -14,13 +15,13 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ThreadConcurrentRunner {
-    @Benchmark
+//    @Benchmark
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
         List<Thread> threads = new ArrayList<>();
         List<Map<String, Long>> counts = new ArrayList<>();
-        BlockingQueue<String> buffer = new LinkedBlockingQueue<>(1000);
+        MyBuffer<String> buffer = new MyBuffer<>(1000);
         String endLine = "__END__";
         for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
             Map<String, Long> count_i = new HashMap<>();

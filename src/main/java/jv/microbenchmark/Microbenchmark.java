@@ -13,12 +13,12 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                .include(BasicSerialRunner.class.getSimpleName())
+//                .include(BasicSerialRunner.class.getSimpleName())
                 .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
-//                .addProfiler(GCProfiler.class)
+                .addProfiler(GCProfiler.class)
 //                .addProfiler(StackProfiler.class)
                 .warmupIterations(5)
                 .measurementIterations(10)
@@ -29,7 +29,7 @@ public class Microbenchmark {
 //                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseZGC"
                 )
-                .result("all2.csv")
+                .result("BasicSerialRunner_tfidf.csv")
                 .resultFormat(ResultFormatType.CSV)
                 .build();
         new Runner(opt).run();
