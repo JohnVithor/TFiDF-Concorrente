@@ -13,6 +13,8 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -22,9 +24,12 @@ public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
 
     public static void main(String[] args) throws IOException {
-        Concurrent.run("devel_100_000_id");
+//        Concurrent.run("devel_100_000_id");
+//        Concurrent.run("test_id");
+        Concurrent.run("train_id");
     }
     public static void run(String target) throws IOException {
+        Instant start = Instant.now();
         Path input_path = Path.of("datasets/" + target + ".csv");
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
         String tfidf_out_fileName = "concurrent_naive/" + target + "_tfidf_results.parquet";
@@ -131,5 +136,6 @@ public class Concurrent {
             throw new RuntimeException(e);
         }
         myWriter.close();
+        System.out.println(Duration.between(start, Instant.now()).toMillis());
     }
 }

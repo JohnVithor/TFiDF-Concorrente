@@ -12,6 +12,8 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +24,13 @@ public class Serial {
     static private final String stop_words_path = "datasets/stopwords.txt";
 
     public static void main(String[] args) throws IOException {
-        Serial.run("devel_100_000_id");
+//        Serial.run("devel_100_000_id");
+//        Serial.run("test_id");
+        Serial.run("train_id");
     }
 
     public static void run(String target) throws IOException {
+        Instant start = Instant.now();
         String tfidf_out_fileName = "serial_naive/" + target + "_tfidf_results.parquet";
         Path input_path = Path.of("datasets/" + target + ".csv");
         UtilInterface util = new ForEachJavaUtil();
@@ -64,5 +69,6 @@ public class Serial {
             throw new RuntimeException(e);
         }
         myWriter.close();
+        System.out.println(Duration.between(start, Instant.now()).toMillis());
     }
 }
