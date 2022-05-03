@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BasicSerialRunner {
-//    @Benchmark
+    @Benchmark
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         long n_docs = 0L;

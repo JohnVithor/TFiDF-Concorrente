@@ -15,7 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ThreadConcurrentRunner {
-//    @Benchmark
+    @Benchmark
     public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
