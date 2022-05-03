@@ -1,89 +1,117 @@
 """comparator.py"""
 
 import sys
-import pandas as pd
+import vaex
+import numpy as np
 
-FILENAME='devel_100_000'
+FILENAME='devel_1_000_id'
 
 
-def calcular_speedup(serial_time:int, concurrent_time:int):
+def calcular_speedup(one_time:int, two_time:int):
     """
-    Calcula qual foi o speedup, fornecidos os tempos de dois programas,
-    o primeiro serial e o segundo concorrente
+    Calcula qual foi o speedup, fornecidos os tempos de dois programas
     """
-    return serial_time / concurrent_time
+    return one_time / two_time
 
 
-def main():
+def main(path_one, path_two, name):
     """
     Função principal do programa
     """
-    # Testando equivalencia dos resultados das versoes seriais e concorrentes
 
-    serial = pd.read_parquet(f"../results_serial/{FILENAME}_tfidf_results.parquet")
-    serial.sort_values(['doc', 'term'], inplace=True)
-    serial.reset_index(drop=True, inplace=True)
+    one = vaex.open(f"{path_one}/{name}_tfidf_results.parquet")
 
-    concurrent = pd.read_parquet(f"../results_concurrent/{FILENAME}_tfidf_results.parquet")
-    concurrent.sort_values(['doc', 'term'], inplace=True)
-    concurrent.reset_index(drop=True, inplace=True)
+    two = vaex.open(f"{path_two}/{name}_tfidf_results.parquet")
 
-    result_comparisson = serial.equals(concurrent)
-    print("Os resultados da versão seria e da versão concorrente" \
-    f"são equivalentes no arquivo {FILENAME}?", result_comparisson)
-
-    del serial
-    del concurrent
+    comparisson_data = one.sort(by=['doc', 'term']).compare(two.sort(by=['doc', 'term']))
+    result_comparisson = np.all([not l for l in comparisson_data])
+    print("Os resultados dos dois arquivos são esquivalentes?", result_comparisson)
 
     if not result_comparisson:
+        print(comparisson_data)
+        del one
+        del two
+        del comparisson_data
         sys.exit()
 
-    with open(f"../logs_serial/output_{FILENAME}.log", encoding="UTF-8") as log_serial,\
-    open(f"../logs_concurrent/output_{FILENAME}.log", encoding="UTF-8") as log_concurrent:
-        print(f"O tamanho do vocabulario nas duas versões, considerando o arquivo {FILENAME}"\
-            ", é o mesmo?", log_serial.readline() == log_concurrent.readline())
-        print(f"O número de documentos nas duas versões, considerando o arquivo {FILENAME}"\
-            ", é o mesmo?", log_serial.readline() == log_concurrent.readline())
-        print("A diferença de tempo médio em nanosegundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em milisegundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em segundos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
-        print("A diferença de tempo médio em minutos de processamento de cada documento" \
-        " foi de:", abs(int(log_serial.readline().split(':')[1])-int(log_concurrent.readline().split(':')[1])))
+    del one
+    del two
+    del comparisson_data
 
-        serial_time = int(log_serial.readline().split(':')[1])
-        concurrent_time = int(log_concurrent.readline().split(':')[1])
-        print("A diferença de tempo médio em nanosegundos de processamento total dos documentos" \
-        " foi de:", abs(serial_time-concurrent_time))
-        if concurrent_time != 0:
-            print(serial_time, concurrent_time)
-            print("O speedup considerando os nanosegundos foi de:", calcular_speedup(serial_time, concurrent_time))
-
-        serial_time = int(log_serial.readline().split(':')[1])
-        concurrent_time = int(log_concurrent.readline().split(':')[1])
+    with open(f"{path_one}/output_{name}.log", encoding="UTF-8") as log_one,\
+    open(f"{path_two}/output_{name}.log", encoding="UTF-8") as log_two:
+        # Primeira parte
+        print("Considerando a primeira parte do algoritmo")
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
         print("A diferença de tempo médio em milisegundos de processamento total dos documentos" \
-        " foi de:", abs(serial_time-concurrent_time))
-        if concurrent_time != 0:
-            print(serial_time, concurrent_time)
-            print("O speedup considerando os milisegundos foi de:", calcular_speedup(serial_time, concurrent_time))
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os milisegundos foi de:", calcular_speedup(one_time, two_time))
 
-        serial_time = int(log_serial.readline().split(':')[1])
-        concurrent_time = int(log_concurrent.readline().split(':')[1])
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
         print("A diferença de tempo médio em segundos de processamento total dos documentos" \
-        " foi de:", abs(serial_time-concurrent_time))
-        if concurrent_time != 0:
-            print(serial_time, concurrent_time)
-            print("O speedup considerando os segundos foi de:", calcular_speedup(serial_time, concurrent_time))
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os segundos foi de:", calcular_speedup(one_time, two_time))
 
-        serial_time = int(log_serial.readline().split(':')[1])
-        concurrent_time = int(log_concurrent.readline().split(':')[1])
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
         print("A diferença de tempo médio em minutos de processamento total dos documentos" \
-        " foi de:", abs(serial_time-concurrent_time))
-        if concurrent_time != 0:
-            print(serial_time, concurrent_time)
-            print("O speedup considerando os minutos foi de:", calcular_speedup(serial_time, concurrent_time))
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os minutos foi de:", calcular_speedup(one_time, two_time))
+
+        # Segunda Parte
+        print("\n\n")
+        print("Considerando a segunda parte do algoritmo")
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em milisegundos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os milisegundos foi de:", calcular_speedup(one_time, two_time))
+
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em segundos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os segundos foi de:", calcular_speedup(one_time, two_time))
+
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em minutos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os minutos foi de:", calcular_speedup(one_time, two_time))
+
+        # Total
+        print("\n\n")
+        print("Considerando o total do algoritmo")
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em milisegundos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os milisegundos foi de:", calcular_speedup(one_time, two_time))
+
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em segundos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os segundos foi de:", calcular_speedup(one_time, two_time))
+
+        one_time = int(log_one.readline())
+        two_time = int(log_two.readline())
+        print("A diferença de tempo médio em minutos de processamento total dos documentos" \
+        " foi de:", abs(one_time-two_time))
+        if two_time != 0:
+            print("O speedup considerando os minutos foi de:", calcular_speedup(one_time, two_time))
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) != 4:
+        raise Exception("Quantidade de argumentos inválida")
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

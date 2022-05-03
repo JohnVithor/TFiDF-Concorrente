@@ -1,10 +1,12 @@
 .idea/
 out/
 target/
-results_serial/
-results_concurrent/
-logs_serial/
-logs_concurrent/
+serial_naive/
+concurrent_naive/
+serial_optimized/
+concurrent_optimized/
+serial_nonoptimized/
+concurrent_nonoptimized/
 datasets/
 /comparator/env/
 *.parquet

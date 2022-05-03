@@ -9,7 +9,7 @@
   },
   {
    "name": "doc",
-   "type": "string"
+   "type": "int"
   },
   {
    "name": "value",
