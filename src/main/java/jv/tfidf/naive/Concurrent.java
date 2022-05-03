@@ -1,5 +1,6 @@
 package jv.tfidf.naive;
 
+import jv.MyBuffer;
 import jv.records.Data;
 import jv.MyWriter;
 import jv.records.Document;
@@ -13,78 +14,120 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 public class Concurrent {
     static private final String stop_words_path = "datasets/stopwords.txt";
+
+    public static void main(String[] args) throws IOException {
+        Concurrent.run("devel_100_000_id");
+    }
     public static void run(String target) throws IOException {
-        System.setErr(new PrintStream(new OutputStream() {
-            @Override
-            public void write(int b) {
-            }
-        }));
         Path input_path = Path.of("datasets/" + target + ".csv");
         String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
         String tfidf_out_fileName = "concurrent_naive/" + target + "_tfidf_results.parquet";
-        UtilInterface utils = new ForEachJavaUtil();
-        Set<String>  stopwords = utils.load_stop_words(stop_words_path);
+        UtilInterface util = new ForEachJavaUtil();
+        Set<String> stopwords = util.load_stop_words(stop_words_path);
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
-        try (Stream<String> lines = Files.lines(input_path)) {
-            List<String> stringList = lines.toList();
-            n_docs = stringList.size();
-            List<Thread> threads = new ArrayList<>();
-            List<Map<String, Long>> counts = new ArrayList<>();
-            int docs_per_thread = n_docs / Runtime.getRuntime().availableProcessors();
-            for (int i = 0; i < Runtime.getRuntime().availableProcessors() - 1; ++i) {
-                Map<String, Long> count_i = new HashMap<>();
-                int finalI = i;
-                Thread t = new Thread(() -> {
-                    for (int j = finalI * docs_per_thread; j < (finalI + 1) * docs_per_thread; j++) {
-                        for (String term : utils.setOfTerms(stringList.get(j), stopwords)) {
-                            count_i.put(term, count_i.getOrDefault(term, 0L) + 1L);
+        List<Thread> threads = new ArrayList<>();
+        List<Map<String, Long>> counts = new ArrayList<>();
+        MyBuffer<String> buffer = new MyBuffer<>(1000);
+        String endLine = "__END__";
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
+            Map<String, Long> count_i = new HashMap<>();
+            Thread t = new Thread(() -> {
+                try {
+                    while (true) {
+                        String line = buffer.take();
+                        if (line == endLine) {
+                            return;
+                        }
+                        for (String term: util.setOfTerms(line, stopwords)) {
+                            count_i.put(term, count_i.getOrDefault(term, 0L)+1L);
                         }
                     }
-                });
-                t.start();
-                threads.add(t);
-                counts.add(count_i);
-            }
-            for (int j = 3 * docs_per_thread; j < n_docs; j++) {
-                for (String term : utils.setOfTerms(stringList.get(j), stopwords)) {
-                    count.put(term, count.getOrDefault(term, 0L) + 1L);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            }
-            for (Thread t : threads) {
-                t.join();
-            }
-            for (Map<String, Long> c : counts) {
-                for (Map.Entry<String, Long> pair : c.entrySet()) {
-                    count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
-                }
+            });
+            t.start();
+            threads.add(t);
+            counts.add(count_i);
+        }
+        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                ++n_docs;
+                buffer.put(line);
             }
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+        try {
+            for (Thread t : threads) {
+                buffer.put(endLine);
+            }
+            for (Thread t : threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        for (Map<String, Long> c : counts) {
+            for (Map.Entry<String, Long> pair : c.entrySet()) {
+                count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
+            }
+        }
+
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
 
-        try (Stream<String> lines = Files.lines(input_path)) {
-            for (String line : lines.toList()) {
-                Document doc = utils.createDocument(line, stopwords);
-                for (String key : doc.counts().keySet()) {
-                    double idf = Math.log(n_docs / (double) count.get(key));
-                    double tf = doc.counts().get(key) / (double) doc.n_terms();
-                    Data data = new Data(key, doc.id(), tf * idf);
-                    try {
-                        myWriter.write(data);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+        threads = new ArrayList<>();
+        int finalN_docs = n_docs;
+        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
+            Thread t = new Thread(() -> {
+                try {
+                    while (true) {
+                        String line = buffer.take();
+                        if (line == endLine) {
+                            return;
+                        }
+                        Document doc = util.createDocument(line, stopwords);
+                        for (String key: doc.counts().keySet()) {
+                            double idf = Math.log(finalN_docs / (double) count.get(key));
+                            double tf = doc.counts().get(key) / (double) doc.n_terms();
+                            Data data = new Data(key, doc.id(), tf*idf);
+                            myWriter.write(data);
+                        }
                     }
+                } catch (InterruptedException | IOException e) {
+                    throw new RuntimeException(e);
                 }
+            });
+            t.start();
+            threads.add(t);
+        }
+        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                buffer.put(line);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            for (Thread t : threads) {
+                buffer.put(endLine);
+            }
+            for (Thread t : threads) {
+                t.join();
+            }
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         myWriter.close();

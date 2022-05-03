@@ -14,26 +14,28 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
 public class Serial {
     static private final String stop_words_path = "datasets/stopwords.txt";
+
+    public static void main(String[] args) throws IOException {
+        Serial.run("devel_100_000_id");
+    }
+
     public static void run(String target) throws IOException {
-        System.setErr(new PrintStream(new OutputStream() {
-            @Override
-            public void write(int b) {}
-        }));
-        Path input_path = Path.of("datasets/" + target + ".csv");
         String tfidf_out_fileName = "serial_naive/" + target + "_tfidf_results.parquet";
-        HashMap<String, Long>count = new HashMap<>();
-        int n_docs = 0;
+        Path input_path = Path.of("datasets/" + target + ".csv");
         UtilInterface util = new ForEachJavaUtil();
         Set<String> stopwords = util.load_stop_words(stop_words_path);
-        try(Stream<String> lines = Files.lines(input_path)) {
-            List<String> stringList = lines.toList();
-            n_docs = stringList.size();
-            for (String line: stringList) {
+        Map<String, Long> count = new HashMap<>();
+        long n_docs = 0L;
+        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                ++n_docs;
                 for (String term: util.setOfTerms(line, stopwords)) {
                     count.put(term, count.getOrDefault(term, 0L)+1L);
                 }
@@ -47,18 +49,15 @@ public class Serial {
                 fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
                         new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
-        try(Stream<String> lines = Files.lines(input_path)) {
-            for (String line: lines.toList()) {
+        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
                 Document doc = util.createDocument(line, stopwords);
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
                     Data data = new Data(key, doc.id(), tf*idf);
-                    try {
-                        myWriter.write(data);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    myWriter.write(data);
                 }
             }
         } catch (IOException e) {
