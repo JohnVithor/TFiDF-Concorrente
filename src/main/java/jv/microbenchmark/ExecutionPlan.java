@@ -15,14 +15,14 @@ import java.util.regex.Pattern;
 
 @State(Scope.Benchmark)
 public class ExecutionPlan {
-//    @Param({"devel_100_000_id"})
-    @Param({"train_id"})
+    @Param({"devel_100_000_id"})
+//    @Param({"train_id"})
 //    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
 //    @Param({"devel_100_000_id", "train_id"})
     public String dataset;
 //    @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
-    @Param({"foreach_java", "foreach_apache"})
-//    @Param({"foreach_java"})
+//    @Param({"foreach_java", "foreach_apache"})
+    @Param({"foreach_java"})
     public String stringManipulation;
     public UtilInterface util;
     public String stop_words_path = "datasets/stopwords.txt";

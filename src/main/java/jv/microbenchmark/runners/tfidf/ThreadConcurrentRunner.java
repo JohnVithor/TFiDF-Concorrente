@@ -74,7 +74,7 @@ public class ThreadConcurrentRunner {
     @Benchmark
     public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
         List<Thread> threads = new ArrayList<>();
-        BlockingQueue<String> buffer = new LinkedBlockingQueue<>(1000);
+        MyBuffer<String> buffer = new MyBuffer<>(1000);
         String endLine = "__END__";
         for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
             Thread t = new Thread(() -> {
