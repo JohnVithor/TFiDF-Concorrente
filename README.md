@@ -26,4 +26,11 @@ O Código em específico está organizado com os seguintes pacotes:
      - Buffer: Para comunicação entre threadsvia producer-consumer
      - Writer: Para armazenamento dos resultados em arquivo .parquet
 
+## Como executar:
+ - Para executar os micro benchmarks, utilize o main da classe Microbenchmark presente no package microbenchmark
+ - Para alterar o plano de execução (State) acesse a classe ExecutionPlan presente no package microbenchmark
+ - Para executar os testes considerando a escrita de arquivo (Sem micro benchmark):
+   - Utilize o main da classe relativa a abordagem escolhida, alterando os parametros para os desejados
+   - Exemplo: Naive Serial ou Naive Concurrent (Threads com Producer-Consumer)
+
 Autor: João Vitor Venceslau Coelho
