@@ -4,9 +4,9 @@ Disciplina: DIM0124 - Programação Concorrente
 Professor: Nélio Alessandro Azevedo Cacho
 
 ## Origem do Dataset 
- - https://www.kaggle.com/datasets/kritanjalijain/amazon-reviews
- - utilize o script python id_inserter para tratar os arquivos antes executar os codigos java
-
+ - Link: https://www.kaggle.com/datasets/kritanjalijain/amazon-reviews
+ - Utilize o script python id_inserter para tratar os marquis antes executar os codigos java
+ - As dependencias python do projeto são: pandas, vaex, seaborn, numpy e csv
 ## Organização do projeto
 
 O projeto está organizado do seguinte modo:
