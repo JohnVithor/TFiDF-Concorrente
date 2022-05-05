@@ -26,8 +26,14 @@ public class Microbenchmark {
                 .jvmArgs("-server"
                         ,"-Xms2048m"
                         ,"-Xmx2048m"
+//                        ,"-XX:+UseSerialGC"
+//                        ,"-XX:+UseParallelGC"
+//                        ,"-XX:+UseConcMarkSweepGC"
+//                        ,"-XX:+UseG1GC"
+//                        ,"-XX:+UseStringDeduplication"
 //                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseZGC"
+//                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("results.csv")
                 .resultFormat(ResultFormatType.CSV)

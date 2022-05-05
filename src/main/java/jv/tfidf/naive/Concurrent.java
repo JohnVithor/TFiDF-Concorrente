@@ -4,7 +4,8 @@ import jv.MyBuffer;
 import jv.records.Data;
 import jv.MyWriter;
 import jv.records.Document;
-import jv.utils.ForEachJavaUtil;
+import jv.tfidf.TFiDFInterface;
+import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
@@ -13,35 +14,49 @@ import org.apache.parquet.hadoop.util.HadoopOutputFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
-public class Concurrent {
+
+public class Concurrent implements TFiDFInterface {
     static private final String stop_words_path = "datasets/stopwords.txt";
+    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
+    static private final String endLine = "__END__";
+    private final Set<String> stopwords;
+    private final UtilInterface util;
+    private final Path corpus_path;
+    private final org.apache.hadoop.fs.Path output_path;
+    private final int n_threads;
+    private final int buffer_size;
+    private final Map<String, Long> count = new HashMap<>();
+    private long n_docs = 0L;
 
     public static void main(String[] args) throws IOException {
-//        Concurrent.run("devel_100_000_id");
-//        Concurrent.run("test_id");
-        Concurrent.run("train_id");
+        UtilInterface util = new ForEachApacheUtil();
+        Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
+        java.nio.file.Path corpus_path = Path.of("datasets/devel_1_000_id.csv");
+        org.apache.hadoop.fs.Path output_path =
+                new org.apache.hadoop.fs.Path("naive_concurrent/devel_1_000_id_tfidf_results.parquet");
+        TFiDFInterface tfidf = new Concurrent(
+                stopwords, util, corpus_path, output_path, 4, 1000);
+        tfidf.compute();
     }
-    public static void run(String target) throws IOException {
-        Instant start = Instant.now();
-        Path input_path = Path.of("datasets/" + target + ".csv");
-        String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
-        String tfidf_out_fileName = "concurrent_naive/" + target + "_tfidf_results.parquet";
-        UtilInterface util = new ForEachJavaUtil();
-        Set<String> stopwords = util.load_stop_words(stop_words_path);
-        Map<String, Long> count = new HashMap<>();
-        int n_docs = 0;
+
+    public Concurrent(Set<String> stopworlds, UtilInterface util,
+                      Path corpus_path, org.apache.hadoop.fs.Path output_path,
+                      int n_threads, int buffer_size) {
+        this.stopwords = stopworlds;
+        this.util = util;
+        this.corpus_path = corpus_path;
+        this.output_path = output_path;
+        this.n_threads = n_threads;
+        this.buffer_size = buffer_size;
+    }
+
+    @Override
+    public void compute_df() throws IOException {
         List<Thread> threads = new ArrayList<>();
         List<Map<String, Long>> counts = new ArrayList<>();
-        MyBuffer<String> buffer = new MyBuffer<>(1000);
-        String endLine = "__END__";
-        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
+        MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
+        for (int i = 0; i < n_threads; ++i) {
             Map<String, Long> count_i = new HashMap<>();
             Thread t = new Thread(() -> {
                 try {
@@ -62,7 +77,7 @@ public class Concurrent {
             threads.add(t);
             counts.add(count_i);
         }
-        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+        try(BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
@@ -86,15 +101,17 @@ public class Concurrent {
                 count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
             }
         }
+    }
 
+    @Override
+    public void compute_tfidf() throws IOException {
         MyWriter myWriter = new MyWriter(HadoopOutputFile.
-                fromPath(new org.apache.hadoop.fs.Path(tfidf_out_fileName),
-                        new Configuration()),
+                fromPath(output_path, new Configuration()),
                 new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
-
-        threads = new ArrayList<>();
-        int finalN_docs = n_docs;
-        for (int i = 0; i < Runtime.getRuntime().availableProcessors(); ++i) {
+        List<Thread> threads = new ArrayList<>();
+        MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
+        long finalN_docs = n_docs;
+        for (int i = 0; i < n_threads; ++i) {
             Thread t = new Thread(() -> {
                 try {
                     while (true) {
@@ -117,7 +134,7 @@ public class Concurrent {
             t.start();
             threads.add(t);
         }
-        try(BufferedReader reader = Files.newBufferedReader(input_path)) {
+        try(BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 buffer.put(line);
@@ -136,6 +153,5 @@ public class Concurrent {
             throw new RuntimeException(e);
         }
         myWriter.close();
-        System.out.println(Duration.between(start, Instant.now()).toMillis());
     }
 }
