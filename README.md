@@ -5,10 +5,12 @@ Professor: Nélio Alessandro Azevedo Cacho
 
 ## Origem do Dataset 
  - https://www.kaggle.com/datasets/kritanjalijain/amazon-reviews
+ - utilize o script python id_inserter para tratar os arquivos antes executar os codigos java
 
 ## Organização do projeto
 
 O projeto está organizado do seguinte modo:
+ - comparator: alguns scripts python para tratar o dataset e gerar alguns graficos
  - datasets: possui arquivos com: 
    - 1000, 10.000, 100.000 documentos (testes rapidos)
    - test(177 MB), train(1,6 MB) (testes mais completos)
