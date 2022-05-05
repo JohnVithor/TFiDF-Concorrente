@@ -1,6 +1,6 @@
 package jv.microbenchmark.runners.tfidf;
 
-import jv.MyBuffer;
+import jv.utils.MyBuffer;
 import jv.microbenchmark.ExecutionPlan;
 import jv.records.Data;
 import jv.records.Document;
@@ -11,8 +11,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class ThreadConcurrentRunner {
     @Benchmark

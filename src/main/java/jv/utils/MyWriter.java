@@ -1,4 +1,4 @@
-package jv;
+package jv.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.MapType;
@@ -23,30 +23,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MyWriter {
-
-    public static void main(String[] args) {
-        String file = "train_id";
-        Path input_path = Path.of("datasets/"+file+".csv");
-        ForEachApacheUtil util = new ForEachApacheUtil();
-        Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        AtomicInteger n_docs = new AtomicInteger(0);
-        try(Stream<String> lines = Files.lines(input_path)) {
-            Map<String, Long> count = lines
-                    .parallel()
-                    .peek(e -> n_docs.getAndIncrement())
-                    .map(line -> util.setOfTerms(line, stopwords))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.groupingBy(token -> token,
-                            Collectors.counting())
-                    );
-            ObjectMapper objectMapper = new ObjectMapper();
-            MapType type = objectMapper.getTypeFactory().constructMapType(
-                    Map.class, String.class, Integer.class);
-            Map<String, Integer> map = objectMapper.readValue(new File(file+".json"), type);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private final ParquetWriter<GenericData.Record> writer;
     private final GenericData.Record record;

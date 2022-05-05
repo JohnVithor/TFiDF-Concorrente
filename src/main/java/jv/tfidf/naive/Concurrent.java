@@ -1,8 +1,8 @@
 package jv.tfidf.naive;
 
-import jv.MyBuffer;
+import jv.utils.MyBuffer;
 import jv.records.Data;
-import jv.MyWriter;
+import jv.utils.MyWriter;
 import jv.records.Document;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;

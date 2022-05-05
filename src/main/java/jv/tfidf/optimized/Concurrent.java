@@ -1,7 +1,7 @@
 package jv.tfidf.optimized;
 
 import jv.records.Data;
-import jv.MyWriter;
+import jv.utils.MyWriter;
 import jv.utils.StreamApacheUtil;
 import jv.utils.UtilInterface;
 import org.apache.avro.Schema;
