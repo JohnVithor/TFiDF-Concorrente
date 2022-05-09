@@ -1,14 +1,11 @@
 package jv.tfidf.naive;
 
 import jv.records.Data;
-import jv.utils.MyWriter;
+import jv.records.TFiDFInfo;
 import jv.records.Document;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.apache.avro.Schema;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.parquet.hadoop.util.HadoopOutputFile;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -18,29 +15,31 @@ import java.util.Map;
 import java.util.Set;
 
 public class Serial implements TFiDFInterface {
-    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
-    private final org.apache.hadoop.fs.Path output_path;
     private final Map<String, Long> count = new HashMap<>();
     private long n_docs = 0L;
+
+    // statistics info
+    private String most_frequent_term ="";
+    private String less_frequent_term ="";
+    private long biggest_document = 0;
+    private long smallest_document = 0;
+    private Data highest_tfidf = new Data("",-1,0);
+    private Data lowest_tfidf = new Data("",-1,Integer.MAX_VALUE);
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
         java.nio.file.Path corpus_path = Path.of("datasets/devel_1_000_id.csv");
-        org.apache.hadoop.fs.Path output_path =
-                new org.apache.hadoop.fs.Path("naive_concurrent/devel_1_000_id_tfidf_results.parquet");
-        TFiDFInterface tfidf = new Serial(stopwords, util, corpus_path, output_path);
+        TFiDFInterface tfidf = new Serial(stopwords, util, corpus_path);
         tfidf.compute();
     }
-    public Serial(Set<String> stopworlds, UtilInterface util,
-                  Path corpus_path, org.apache.hadoop.fs.Path output_path) {
+    public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
-        this.output_path = output_path;
     }
 
     @Override
@@ -56,27 +55,59 @@ public class Serial implements TFiDFInterface {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        long mft = 0;
+        long lft = Long.MAX_VALUE;
+        for (Map.Entry<String, Long> entry: this.count.entrySet()) {
+            if (entry.getValue() > mft) {
+                mft = entry.getValue();
+                most_frequent_term = entry.getKey();
+            } else if (entry.getValue() < lft) {
+                lft = entry.getValue();
+                less_frequent_term = entry.getKey();
+            }
+        }
     }
 
     @Override
     public void compute_tfidf() throws IOException {
-        MyWriter myWriter = new MyWriter(HadoopOutputFile.
-                fromPath(output_path, new Configuration()),
-                new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
+        long bgc=0;
+        long sbc=Long.MAX_VALUE;
         try(BufferedReader reader = Files.newBufferedReader(this.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Document doc = util.createDocument(line, stopwords);
+                if (doc.n_terms() > bgc) {
+                    bgc = doc.n_terms();
+                    biggest_document = doc.id();
+                } else if (doc.n_terms() < sbc) {
+                    sbc = doc.n_terms();
+                    smallest_document = doc.id();
+                }
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(this.n_docs / (double) this.count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
                     Data data = new Data(key, doc.id(), tf*idf);
-                    myWriter.write(data);
+                    if (data.value() > highest_tfidf.value()) {
+                        highest_tfidf = data;
+                    } else if (data.value() > lowest_tfidf.value()) {
+                        lowest_tfidf = data;
+                    }
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        myWriter.close();
+    }
+
+    @Override
+    public TFiDFInfo results() {
+        return new TFiDFInfo(
+                this.count.size(),
+                this.most_frequent_term,
+                this.less_frequent_term,
+                this.biggest_document,
+                this.smallest_document,
+                this.highest_tfidf,
+                this.lowest_tfidf);
     }
 }

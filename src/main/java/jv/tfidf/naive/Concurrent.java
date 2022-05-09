@@ -1,5 +1,6 @@
 package jv.tfidf.naive;
 
+import jv.records.TFiDFInfo;
 import jv.utils.MyBuffer;
 import jv.records.Data;
 import jv.utils.MyWriter;
@@ -17,36 +18,39 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class Concurrent implements TFiDFInterface {
-    static private final String stop_words_path = "datasets/stopwords.txt";
     static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
     static private final String endLine = "__END__";
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
-    private final org.apache.hadoop.fs.Path output_path;
     private final int n_threads;
     private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
     private long n_docs = 0L;
 
+    // statistics info
+
+    private String most_frequent_term ="";
+    private String less_frequent_term ="";
+    private long biggest_document = 0;
+    private long smallest_document = 0;
+    private Data highest_tfidf = new Data("",-1,0);
+    private Data lowest_tfidf = new Data("",-1,Integer.MAX_VALUE);
+
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
         java.nio.file.Path corpus_path = Path.of("datasets/devel_1_000_id.csv");
-        org.apache.hadoop.fs.Path output_path =
-                new org.apache.hadoop.fs.Path("naive_concurrent/devel_1_000_id_tfidf_results.parquet");
         TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, output_path, 4, 1000);
+                stopwords, util, corpus_path, 4, 1000);
         tfidf.compute();
     }
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path, org.apache.hadoop.fs.Path output_path,
-                      int n_threads, int buffer_size) {
+                      Path corpus_path, int n_threads, int buffer_size) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
-        this.output_path = output_path;
         this.n_threads = n_threads;
         this.buffer_size = buffer_size;
     }
@@ -105,9 +109,6 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() throws IOException {
-        MyWriter myWriter = new MyWriter(HadoopOutputFile.
-                fromPath(output_path, new Configuration()),
-                new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
         List<Thread> threads = new ArrayList<>();
         MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         long finalN_docs = n_docs;
@@ -124,10 +125,10 @@ public class Concurrent implements TFiDFInterface {
                             double idf = Math.log(finalN_docs / (double) count.get(key));
                             double tf = doc.counts().get(key) / (double) doc.n_terms();
                             Data data = new Data(key, doc.id(), tf*idf);
-                            myWriter.write(data);
+                            // TODO
                         }
                     }
-                } catch (InterruptedException | IOException e) {
+                } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             });
@@ -152,6 +153,17 @@ public class Concurrent implements TFiDFInterface {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        myWriter.close();
+    }
+
+    @Override
+    public TFiDFInfo results() {
+        return new TFiDFInfo(
+                this.count.size(),
+                this.most_frequent_term,
+                this.less_frequent_term,
+                this.biggest_document,
+                this.smallest_document,
+                this.highest_tfidf,
+                this.lowest_tfidf);
     }
 }
