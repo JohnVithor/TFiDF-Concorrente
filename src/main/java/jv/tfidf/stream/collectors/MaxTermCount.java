@@ -1,4 +1,4 @@
-package jv.collectors;
+package jv.tfidf.stream.collectors;
 
 import java.util.HashSet;
 import java.util.Set;
