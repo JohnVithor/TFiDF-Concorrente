@@ -1,5 +1,7 @@
 package jv.tfidf;
 
+import jv.records.TFiDFInfo;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -20,4 +22,6 @@ public interface TFiDFInterface {
         System.out.println(Duration.between(mid, end).toMillis());
         System.out.println(Duration.between(start, end).toMillis());
     };
+
+    TFiDFInfo results();
 }
