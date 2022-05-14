@@ -27,17 +27,13 @@ public class Concurrent implements TFiDFInterface {
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
     private Long most_frequent_term_count = 0L;
-    private final List<Long> biggest_documents = new ArrayList<>();
-    private Long biggest_document_count = 0L;
-    private final List<Long> smallest_documents = new ArrayList<>();
-    private Long smallest_document_count = Long.MAX_VALUE;
     private final List<Data> highest_tfidf = new ArrayList<>();
     private final List<Data> lowest_tfidf = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/test_id.csv");
+        java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
         TFiDFInterface tfidf = new Concurrent(
                 stopwords, util, corpus_path, 4, 1000);
         tfidf.compute();
@@ -117,20 +113,13 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() throws IOException {
-        final long[] bgc = new long[n_threads];
-        final long[] sbc = new long[n_threads];
-        final ArrayList<ArrayList<Long>> bgc_id = new ArrayList<>();
-        final ArrayList<ArrayList<Long>> sbc_id = new ArrayList<>();
         final ArrayList<ArrayList<Data>> data_high = new ArrayList<>();
         final ArrayList<ArrayList<Data>> data_low = new ArrayList<>();
         final double[] htfidf = new double[n_threads];
         final double[] ltfidf = new double[n_threads];
         for (int i = 0; i < n_threads; i++) {
-            bgc_id.add(new ArrayList<>());
-            sbc_id.add(new ArrayList<>());
             data_high.add(new ArrayList<>());
             data_low.add(new ArrayList<>());
-            sbc[i] = Long.MAX_VALUE;
             ltfidf[i] = Double.MAX_VALUE;
         }
         List<Thread> threads = new ArrayList<>();
@@ -146,22 +135,6 @@ public class Concurrent implements TFiDFInterface {
                             return;
                         }
                         Document doc = util.createDocument(line, stopwords);
-
-                        if (doc.n_terms() > bgc[finalI]) {
-                            bgc[finalI] = doc.n_terms();
-                            bgc_id.get(finalI).clear();
-                            bgc_id.get(finalI).add(doc.id());
-                        } else if (doc.n_terms() == bgc[finalI]) {
-                            bgc_id.get(finalI).add(doc.id());
-                        }
-                        if (doc.n_terms() < sbc[finalI]) {
-                            sbc[finalI] = doc.n_terms();
-                            sbc_id.get(finalI).clear();
-                            sbc_id.get(finalI).add(doc.id());
-                        } else if (doc.n_terms() == sbc[finalI]) {
-                            sbc_id.get(finalI).add(doc.id());
-                        }
-
                         for (String key: doc.counts().keySet()) {
                             double idf = Math.log(finalN_docs / (double) count.get(key));
                             double tf = doc.counts().get(key) / (double) doc.n_terms();
@@ -211,20 +184,6 @@ public class Concurrent implements TFiDFInterface {
         double htfidf_final = 0.0;
         double ltfidf_final = Double.MAX_VALUE;
         for (int i = 0; i < n_threads; ++i) {
-            if (bgc[i] > biggest_document_count) {
-                biggest_document_count = bgc[i];
-                biggest_documents.clear();
-                biggest_documents.addAll(bgc_id.get(i));
-            } else if (bgc[i] == biggest_document_count) {
-                biggest_documents.addAll(bgc_id.get(i));
-            }
-            if (sbc[i] < smallest_document_count) {
-                smallest_document_count = sbc[i];
-                smallest_documents.clear();
-                smallest_documents.addAll(sbc_id.get(i));
-            } else if (sbc[i] == smallest_document_count) {
-                smallest_documents.addAll(sbc_id.get(i));
-            }
             if (htfidf[i] > htfidf_final) {
                 htfidf_final = htfidf[i];
                 highest_tfidf.clear();
@@ -245,8 +204,6 @@ public class Concurrent implements TFiDFInterface {
     @Override
     public TFiDFInfo results() {
         this.most_frequent_terms.sort(String::compareTo);
-        this.biggest_documents.sort(Long::compareTo);
-        this.smallest_documents.sort(Long::compareTo);
         this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
         this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
         return new TFiDFInfo(
@@ -254,10 +211,6 @@ public class Concurrent implements TFiDFInterface {
                 this.most_frequent_terms,
                 this.most_frequent_term_count,
                 this.n_docs,
-                this.biggest_documents,
-                this.biggest_document_count,
-                this.smallest_documents,
-                this.smallest_document_count,
                 this.highest_tfidf,
                 this.lowest_tfidf);
     }

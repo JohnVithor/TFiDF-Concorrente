@@ -23,17 +23,13 @@ public class Serial implements TFiDFInterface {
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
     private Long most_frequent_term_count = 0L;
-    private final List<Long> biggest_documents = new ArrayList<>();
-    private Long biggest_document_count = 0L;
-    private final List<Long> smallest_documents = new ArrayList<>();
-    private Long smallest_document_count = Long.MAX_VALUE;
     private final List<Data> highest_tfidf = new ArrayList<>();
     private final List<Data> lowest_tfidf = new ArrayList<>();
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel_1_000_id.csv");
+        java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
         TFiDFInterface tfidf = new Serial(stopwords, util, corpus_path);
         tfidf.compute();
         JSON json = new JSON();
@@ -77,20 +73,6 @@ public class Serial implements TFiDFInterface {
             String line;
             while ((line = reader.readLine()) != null) {
                 Document doc = util.createDocument(line, stopwords);
-                if (doc.n_terms() > biggest_document_count) {
-                    biggest_document_count = doc.n_terms();
-                    biggest_documents.clear();
-                    biggest_documents.add(doc.id());
-                } else if (doc.n_terms() == biggest_document_count) {
-                    biggest_documents.add(doc.id());
-                }
-                if (doc.n_terms() < smallest_document_count) {
-                    smallest_document_count = doc.n_terms();
-                    smallest_documents.clear();
-                    smallest_documents.add(doc.id());
-                } else if (doc.n_terms() == smallest_document_count) {
-                    smallest_documents.add(doc.id());
-                }
                 for (String key: doc.counts().keySet()) {
                     double idf = Math.log(this.n_docs / (double) this.count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
@@ -119,8 +101,6 @@ public class Serial implements TFiDFInterface {
     @Override
     public TFiDFInfo results() {
         this.most_frequent_terms.sort(String::compareTo);
-        this.biggest_documents.sort(Long::compareTo);
-        this.smallest_documents.sort(Long::compareTo);
         this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
         this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
         return new TFiDFInfo(
@@ -128,10 +108,6 @@ public class Serial implements TFiDFInterface {
                 this.most_frequent_terms,
                 this.most_frequent_term_count,
                 this.n_docs,
-                this.biggest_documents,
-                this.biggest_document_count,
-                this.smallest_documents,
-                this.smallest_document_count,
                 this.highest_tfidf,
                 this.lowest_tfidf);
     }
