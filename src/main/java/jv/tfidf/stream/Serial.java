@@ -1,9 +1,9 @@
-package jv.tfidf.optimized;
+package jv.tfidf.stream;
 
-import jv.collectors.MaxTermCount;
-import jv.collectors.MaxTermCountCollector;
-import jv.collectors.MinMaxTermsTFiDF;
-import jv.collectors.MinMaxTermsTFiDFCollector;
+import jv.tfidf.stream.collectors.MaxTermCount;
+import jv.tfidf.stream.collectors.MaxTermCountCollector;
+import jv.tfidf.stream.collectors.MinMaxTermsTFiDF;
+import jv.tfidf.stream.collectors.MinMaxTermsTFiDFCollector;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
@@ -35,7 +35,7 @@ public class Serial implements TFiDFInterface {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
         java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
-        TFiDFInterface tfidf = new jv.tfidf.optimized.Serial(stopwords, util, corpus_path);
+        TFiDFInterface tfidf = new jv.tfidf.stream.Serial(stopwords, util, corpus_path);
         tfidf.compute();
         JSON json = new JSON();
         System.out.println(json.toJSON(tfidf.results()));

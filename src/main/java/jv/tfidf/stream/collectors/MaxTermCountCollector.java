@@ -1,8 +1,5 @@
-package jv.collectors;
+package jv.tfidf.stream.collectors;
 
-import jv.records.Data;
-
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;

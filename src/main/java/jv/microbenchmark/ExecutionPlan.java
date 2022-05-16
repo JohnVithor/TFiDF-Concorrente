@@ -11,43 +11,46 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 @State(Scope.Benchmark)
 public class ExecutionPlan {
     @Param({"devel_100_000_id"})
 //    @Param({"train_id"})
-//    @Param({"devel_1_000_id", "devel_10_000_id", "devel_100_000_id", "test_id", "train_id"})
-//    @Param({"devel_100_000_id", "train_id"})
     public String dataset;
-//    @Param({"foreach_java", "foreach_apache", "stream_java", "stream_apache"})
 //    @Param({"foreach_java", "foreach_apache"})
     @Param({"foreach_java"})
     public String stringManipulation;
+
+    @Param({"2", "4"})
+    public int n_threads;
+
+    @Param({"1000"})
+    public int buffer_size;
+
     public UtilInterface util;
     public String stop_words_path = "datasets/stopwords.txt";
-    public Path input_path;
+    public Path corpus_path;
     public Set<String> stopwords;
     public Map<String, Long> count;
-    public AtomicInteger n_docs;
-    public Path text_input = Path.of("datasets/devel_1_000_id.csv");
-    public final Pattern space_split = Pattern.compile("\\s+");
-    public final Pattern csv_split = Pattern.compile("\";\"");
-    public final Pattern normalize = Pattern.compile("[^\\p{L}\\d ]");
+    public long n_docs;
 
     @Setup(Level.Iteration)
     public void setUp() {
-        input_path = Path.of("datasets/" + dataset + ".csv");
-        switch (stringManipulation) {
-            case "foreach_java" -> util = new ForEachJavaUtil();
-            case "foreach_apache" -> util = new ForEachApacheUtil();
-            case "stream_java" -> util = new StreamJavaUtil();
-            default -> util = new StreamApacheUtil();
+        corpus_path = Path.of("datasets/" + dataset + ".csv");
+        switch (dataset) {
+            case "devel_100_000_id" -> n_docs = 100000;
+            case "test_id" -> n_docs = 400000;
+            case "train_id" -> n_docs = 3600000;
         }
-        n_docs = new AtomicInteger(0);
+        if ("foreach_java".equals(stringManipulation)) {
+            util = new ForEachJavaUtil();
+        } else {
+            util = new ForEachApacheUtil();
+        }
         // preparação para a segunda etapa do algoritmo
         UtilInterface util = new ForEachApacheUtil();
         stopwords = util.load_stop_words(stop_words_path);
+
         ObjectMapper objectMapper = new ObjectMapper();
         MapType type = objectMapper
                 .getTypeFactory()

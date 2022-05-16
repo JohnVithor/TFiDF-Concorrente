@@ -1,9 +1,9 @@
-package jv.tfidf.optimized;
+package jv.tfidf.stream;
 
-import jv.collectors.MaxTermCount;
-import jv.collectors.MaxTermCountCollector;
-import jv.collectors.MinMaxTermsTFiDF;
-import jv.collectors.MinMaxTermsTFiDFCollector;
+import jv.tfidf.stream.collectors.MaxTermCount;
+import jv.tfidf.stream.collectors.MaxTermCountCollector;
+import jv.tfidf.stream.collectors.MinMaxTermsTFiDF;
+import jv.tfidf.stream.collectors.MinMaxTermsTFiDFCollector;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
