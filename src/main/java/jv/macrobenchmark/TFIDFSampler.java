@@ -1,5 +1,6 @@
 package jv.macrobenchmark;
 
+import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
 import jv.tfidf.naive.Concurrent;
@@ -14,23 +15,21 @@ import org.apache.jmeter.samplers.SampleResult;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
-public class SerialTFIDFSampler extends AbstractJavaSamplerClient implements Serializable {
+public class TFIDFSampler extends AbstractJavaSamplerClient implements Serializable {
 
-    Set<String> stopworlds = null;
-    UtilInterface util = new ForEachApacheUtil();
+    private final UtilInterface util = new ForEachApacheUtil();
+    private final Set<String> stopworlds = util.load_stop_words("/home/johnvithor/UFRN/Concorrente/TFiDF-Concorrente/stopwords.txt");
 
     @Override
     public SampleResult runTest(JavaSamplerContext javaSamplerContext) {
         SampleResult result = new SampleResult();
         result.setSampleLabel("Test Sample");
 
-        String corpus_path_str = javaSamplerContext.getParameter("corpus_path");
+        String corpus_name = javaSamplerContext.getParameter("corpus_path");
         String tfidf_str = javaSamplerContext.getParameter("TFiDF");
         boolean stopwords_flag = Boolean.parseBoolean(javaSamplerContext.getParameter("stopwords"));
         int n_threads = Integer.parseInt(javaSamplerContext.getParameter("n_threads"));
@@ -41,9 +40,17 @@ public class SerialTFIDFSampler extends AbstractJavaSamplerClient implements Ser
             selected_stopwords = stopworlds;
         }
 
-        Path corpus_path = Path.of(corpus_path_str);
-        TFiDFInfo expected_info = getExpectedInfo(corpus_path);
-        TFiDFInterface tfidf = null;
+        Path corpus_path = Path.of("/home/johnvithor/UFRN/Concorrente/TFiDF-Concorrente/datasets/"+corpus_name+".csv");
+        TFiDFInfo expected_info = getExpectedInfo(corpus_name);
+        if (expected_info == null) {
+            result.sampleStart();
+            result.sampleEnd();
+            result.setResponseCode("500");
+            result.setResponseMessage("corpus not supported");
+            result.setSuccessful(false);
+            return result;
+        }
+        TFiDFInterface tfidf;
 
         switch (tfidf_str) {
             case "Naive Serial" -> tfidf = new Serial(selected_stopwords, util, corpus_path);
@@ -52,9 +59,9 @@ public class SerialTFIDFSampler extends AbstractJavaSamplerClient implements Ser
             default -> {
                 result.sampleStart();
                 result.sampleEnd();
-                result.setResponseCode("200");
-                result.setResponseMessage("OK");
-                result.setSuccessful(true);
+                result.setResponseCode("500");
+                result.setResponseMessage("TFiDF approach not known");
+                result.setSuccessful(false);
                 return result;
             }
         }
@@ -82,8 +89,35 @@ public class SerialTFIDFSampler extends AbstractJavaSamplerClient implements Ser
         return result;
     }
 
-    TFiDFInfo getExpectedInfo(Path corpus_path) {
-        return null;
+    TFiDFInfo getExpectedInfo(String corpus_name) {
+        return switch (corpus_name) {
+            case "train" -> new TFiDFInfo(
+                    2328897L,
+                    List.of("book"),
+                    902838L,
+                    3600000L,
+                    List.of(new Data("morethink", 135468 , 14.40329722286639200)),
+                    List.of(new Data("book"     , 817017 , 0.011430958587727554),
+                            new Data("book"     , 2778979, 0.011430958587727554))
+            );
+            case "test" -> new TFiDFInfo(
+                    491669L,
+                    List.of("book"),
+                    100047L,
+                    400000L,
+                    List.of(new Data("qqq" , 18753  , 8.616051279197771000)),
+                    List.of(new Data("book", 361312, 0.0115485372627941260))
+            );
+            case "devel" -> new TFiDFInfo(
+                    180809L,
+                    List.of("book"),
+                    27747L,
+                    100000L,
+                    List.of(new Data("stopplease", 42525, 9.045870008190894000)),
+                    List.of(new Data("book"      , 74354, 0.013785402792987728))
+            );
+            default -> null;
+        };
     }
 
     @Override public Arguments getDefaultParameters() {
