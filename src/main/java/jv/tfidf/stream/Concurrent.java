@@ -9,7 +9,6 @@ import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.mortbay.util.ajax.JSON;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -38,8 +37,7 @@ public class Concurrent implements TFiDFInterface {
         java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
         TFiDFInterface tfidf = new Concurrent(stopwords, util, corpus_path);
         tfidf.compute();
-        JSON json = new JSON();
-        System.out.println(json.toJSON(tfidf.results()));
+        System.out.println(tfidf.results());
     }
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,

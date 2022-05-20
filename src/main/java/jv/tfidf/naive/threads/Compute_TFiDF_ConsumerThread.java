@@ -1,4 +1,4 @@
-package jv.tfidf;
+package jv.tfidf.naive.threads;
 
 import jv.records.Data;
 import jv.records.Document;

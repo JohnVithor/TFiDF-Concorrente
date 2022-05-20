@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class TFIDFSampler extends AbstractJavaSamplerClient implements Serializable {
+public class TFIDFSampler extends AbstractJavaSamplerClient {
 
     private final UtilInterface util = new ForEachApacheUtil();
     private final Set<String> stopworlds = util.load_stop_words("/home/johnvithor/UFRN/Concorrente/TFiDF-Concorrente/stopwords.txt");

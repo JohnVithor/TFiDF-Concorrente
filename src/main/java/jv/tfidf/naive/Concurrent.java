@@ -1,15 +1,13 @@
 package jv.tfidf.naive;
 
 import jv.records.TFiDFInfo;
-import jv.tfidf.Compute_DF_ConsumerThread;
-import jv.tfidf.Compute_TFiDF_ConsumerThread;
+import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
+import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
 import jv.utils.MyBuffer;
 import jv.records.Data;
-import jv.records.Document;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.mortbay.util.ajax.JSON;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -35,12 +33,12 @@ public class Concurrent implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/train.csv");
+        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, 4, 1000);
+                stopwords, util, corpus_path, 4, 1000
+        );
         tfidf.compute();
-        JSON json = new JSON();
-        System.out.println(json.toJSON(tfidf.results()));
+        System.out.println(tfidf.results());
     }
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,
@@ -58,7 +56,7 @@ public class Concurrent implements TFiDFInterface {
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
             Compute_DF_ConsumerThread t = new Compute_DF_ConsumerThread(
-                    buffer,util, stopwords, endLine
+                    buffer, util, stopwords, endLine
             );
             t.start();
             threads.add(t);
@@ -73,7 +71,7 @@ public class Concurrent implements TFiDFInterface {
             throw new RuntimeException(e);
         }
         try {
-            for (Thread t : threads) {
+            for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
             for (Compute_DF_ConsumerThread t : threads) {
@@ -84,15 +82,6 @@ public class Concurrent implements TFiDFInterface {
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
-        }
-        for (Map.Entry<String, Long> entry: this.count.entrySet()) {
-            if (entry.getValue() > most_frequent_term_count) {
-                most_frequent_term_count = entry.getValue();
-                most_frequent_terms.clear();
-                most_frequent_terms.add(entry.getKey());
-            } else if (entry.getValue().equals(most_frequent_term_count)) {
-                most_frequent_terms.add(entry.getKey());
-            }
         }
     }
 
@@ -116,7 +105,7 @@ public class Concurrent implements TFiDFInterface {
             throw new RuntimeException(e);
         }
         try {
-            for (Thread t : threads) {
+            for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
             double htfidf_final = 0.0;
@@ -145,6 +134,9 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public TFiDFInfo results() {
+        most_frequent_term_count = util.compute_mft(
+                count, most_frequent_term_count, most_frequent_terms
+        );
         this.most_frequent_terms.sort(String::compareTo);
         this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
         this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
