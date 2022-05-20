@@ -1,15 +1,13 @@
 package jv.tfidf.naive;
 
-import jv.MyBuffer;
+import jv.records.TFiDFInfo;
+import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
+import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
+import jv.utils.MyBuffer;
 import jv.records.Data;
-import jv.MyWriter;
-import jv.records.Document;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.apache.avro.Schema;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.parquet.hadoop.util.HadoopOutputFile;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -17,65 +15,51 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class Concurrent implements TFiDFInterface {
-    static private final String stop_words_path = "datasets/stopwords.txt";
-    static private final String tfidf_schema_path = "src/main/resources/tfidf_schema.avsc";
     static private final String endLine = "__END__";
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
-    private final org.apache.hadoop.fs.Path output_path;
     private final int n_threads;
     private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
     private long n_docs = 0L;
 
+    // statistics info
+    private final List<String> most_frequent_terms = new ArrayList<>();
+    private Long most_frequent_term_count = 0L;
+    private final List<Data> highest_tfidf = new ArrayList<>();
+    private final List<Data> lowest_tfidf = new ArrayList<>();
+
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
-        Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel_1_000_id.csv");
-        org.apache.hadoop.fs.Path output_path =
-                new org.apache.hadoop.fs.Path("naive_concurrent/devel_1_000_id_tfidf_results.parquet");
+        Set<String> stopwords = util.load_stop_words("stopwords.txt");
+        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, output_path, 4, 1000);
+                stopwords, util, corpus_path, 4, 1000
+        );
         tfidf.compute();
+        System.out.println(tfidf.results());
     }
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path, org.apache.hadoop.fs.Path output_path,
-                      int n_threads, int buffer_size) {
+                      Path corpus_path, int n_threads, int buffer_size) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
-        this.output_path = output_path;
         this.n_threads = n_threads;
         this.buffer_size = buffer_size;
     }
 
     @Override
     public void compute_df() throws IOException {
-        List<Thread> threads = new ArrayList<>();
-        List<Map<String, Long>> counts = new ArrayList<>();
-        MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
+        final List<Compute_DF_ConsumerThread> threads = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Map<String, Long> count_i = new HashMap<>();
-            Thread t = new Thread(() -> {
-                try {
-                    while (true) {
-                        String line = buffer.take();
-                        if (line == endLine) {
-                            return;
-                        }
-                        for (String term: util.setOfTerms(line, stopwords)) {
-                            count_i.put(term, count_i.getOrDefault(term, 0L)+1L);
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            Compute_DF_ConsumerThread t = new Compute_DF_ConsumerThread(
+                    buffer, util, stopwords, endLine
+            );
             t.start();
             threads.add(t);
-            counts.add(count_i);
         }
         try(BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
@@ -87,50 +71,31 @@ public class Concurrent implements TFiDFInterface {
             throw new RuntimeException(e);
         }
         try {
-            for (Thread t : threads) {
+            for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (Thread t : threads) {
+            for (Compute_DF_ConsumerThread t : threads) {
                 t.join();
+                for (Map.Entry<String, Long> pair : t.getCount().entrySet()) {
+                    count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        for (Map<String, Long> c : counts) {
-            for (Map.Entry<String, Long> pair : c.entrySet()) {
-                count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
-            }
-        }
+        most_frequent_term_count = util.compute_mft(
+                count, most_frequent_term_count, most_frequent_terms
+        );
     }
 
     @Override
     public void compute_tfidf() throws IOException {
-        MyWriter myWriter = new MyWriter(HadoopOutputFile.
-                fromPath(output_path, new Configuration()),
-                new Schema.Parser().parse(new FileInputStream(tfidf_schema_path)));
-        List<Thread> threads = new ArrayList<>();
-        MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
-        long finalN_docs = n_docs;
+        final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Thread t = new Thread(() -> {
-                try {
-                    while (true) {
-                        String line = buffer.take();
-                        if (line == endLine) {
-                            return;
-                        }
-                        Document doc = util.createDocument(line, stopwords);
-                        for (String key: doc.counts().keySet()) {
-                            double idf = Math.log(finalN_docs / (double) count.get(key));
-                            double tf = doc.counts().get(key) / (double) doc.n_terms();
-                            Data data = new Data(key, doc.id(), tf*idf);
-                            myWriter.write(data);
-                        }
-                    }
-                } catch (InterruptedException | IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            Compute_TFiDF_ConsumerThread t = new Compute_TFiDF_ConsumerThread(
+                    buffer, util, stopwords, endLine, count, n_docs
+            );
             t.start();
             threads.add(t);
         }
@@ -143,15 +108,44 @@ public class Concurrent implements TFiDFInterface {
             throw new RuntimeException(e);
         }
         try {
-            for (Thread t : threads) {
+            for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (Thread t : threads) {
+            double htfidf_final = 0.0;
+            double ltfidf_final = Double.MAX_VALUE;
+            for (Compute_TFiDF_ConsumerThread t : threads) {
                 t.join();
+                if (t.getHtfidf() > htfidf_final) {
+                    htfidf_final = t.getHtfidf();
+                    highest_tfidf.clear();
+                    highest_tfidf.addAll(t.getData_high());
+                } else if (t.getHtfidf() == htfidf_final) {
+                    highest_tfidf.addAll(t.getData_high());
+                }
+                if (t.getLtfidf() < ltfidf_final) {
+                    ltfidf_final = t.getLtfidf();
+                    lowest_tfidf.clear();
+                    lowest_tfidf.addAll(t.getData_low());
+                } else if (t.getLtfidf() == ltfidf_final) {
+                    lowest_tfidf.addAll(t.getData_low());
+                }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        myWriter.close();
+    }
+
+    @Override
+    public TFiDFInfo results() {
+        this.most_frequent_terms.sort(String::compareTo);
+        this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
+        this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
+        return new TFiDFInfo(
+                this.count.size(),
+                this.most_frequent_terms,
+                this.most_frequent_term_count,
+                this.n_docs,
+                this.highest_tfidf,
+                this.lowest_tfidf);
     }
 }

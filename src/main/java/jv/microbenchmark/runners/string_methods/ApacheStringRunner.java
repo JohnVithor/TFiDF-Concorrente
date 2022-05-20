@@ -1,7 +1,7 @@
 package jv.microbenchmark.runners.string_methods;
 
 import jv.microbenchmark.ExecutionPlan;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 

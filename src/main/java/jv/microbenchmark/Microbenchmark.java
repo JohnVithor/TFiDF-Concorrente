@@ -1,9 +1,7 @@
 package jv.microbenchmark;
 
-import jv.microbenchmark.runners.tfidf.BasicSerialRunner;
-import jv.microbenchmark.runners.tfidf.StreamConcurrentRunner;
-import jv.microbenchmark.runners.tfidf.StreamSerialRunner;
-import jv.microbenchmark.runners.tfidf.ThreadConcurrentRunner;
+import jv.microbenchmark.runners.tfidf.naive.NaiveSerialRunner;
+import jv.microbenchmark.runners.tfidf.naive.ThreadConcurrentRunner;
 import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
@@ -13,7 +11,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                .include(BasicSerialRunner.class.getSimpleName())
+                .include(NaiveSerialRunner.class.getSimpleName())
                 .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())

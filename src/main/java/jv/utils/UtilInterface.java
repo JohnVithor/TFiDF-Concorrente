@@ -1,12 +1,14 @@
 package jv.utils;
 
 import jv.records.Document;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -26,4 +28,20 @@ public interface UtilInterface {
     Document createDocument(String line, Set<String> stopwords);
     String normalize(String source);
     Set<String> setOfTerms(String line, Set<String> stopwords);
+
+    default Long compute_mft(Map<String, Long> count,
+                            Long most_frequent_term_count,
+                            List<String> most_frequent_terms
+    ) {
+        for (Map.Entry<String, Long> entry: count.entrySet()) {
+            if (entry.getValue() > most_frequent_term_count) {
+                most_frequent_term_count = entry.getValue();
+                most_frequent_terms.clear();
+                most_frequent_terms.add(entry.getKey());
+            } else if (entry.getValue().equals(most_frequent_term_count)) {
+                most_frequent_terms.add(entry.getKey());
+            }
+        }
+        return most_frequent_term_count;
+    }
 }
