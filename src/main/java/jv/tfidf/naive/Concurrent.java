@@ -51,7 +51,7 @@ public class Concurrent implements TFiDFInterface {
     }
 
     @Override
-    public void compute_df() throws IOException {
+    public void compute_df() {
         final List<Compute_DF_ConsumerThread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
@@ -89,7 +89,7 @@ public class Concurrent implements TFiDFInterface {
     }
 
     @Override
-    public void compute_tfidf() throws IOException {
+    public void compute_tfidf() {
         final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {

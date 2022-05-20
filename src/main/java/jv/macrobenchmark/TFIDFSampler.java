@@ -67,23 +67,20 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
         }
 
         result.sampleStart();
-        try {
-            tfidf.compute();
-            if(tfidf.results().equals(expected_info)) {
-                result.sampleEnd();
-                result.setResponseCode("200");
-                result.setResponseMessage("OK");
-                result.setSuccessful(true);
-            } else {
-                result.sampleEnd();
-                result.setResponseCode("500");
-                result.setResponseMessage("NOK");
-                result.setSuccessful(false);
-            }
-        } catch (IOException e) {
+        tfidf.compute();
+        TFiDFInfo r = tfidf.results();
+        String responseData = "{\"actual\"=" + r + ",\n" +
+                "\"expected\"=" + expected_info + "}";
+        result.setResponseData(responseData, "UTF-8");
+        if(r.equals(expected_info)) {
+            result.sampleEnd();
+            result.setResponseCode("200");
+            result.setResponseMessage("OK");
+            result.setSuccessful(true);
+        } else {
             result.sampleEnd();
             result.setResponseCode("500");
-            result.setResponseMessage(e.getMessage());
+            result.setResponseMessage("NOK");
             result.setSuccessful(false);
         }
         return result;

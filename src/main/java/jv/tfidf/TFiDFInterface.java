@@ -8,11 +8,11 @@ import java.time.Instant;
 
 public interface TFiDFInterface {
 
-    void compute_df() throws IOException;
+    void compute_df();
 
-    void compute_tfidf() throws IOException;
+    void compute_tfidf();
 
-    default void compute() throws IOException {
+    default void compute() {
         Instant start = Instant.now();
         compute_df();
         Instant mid = Instant.now();

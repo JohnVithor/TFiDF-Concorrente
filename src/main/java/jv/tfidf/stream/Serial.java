@@ -69,7 +69,7 @@ public class Serial implements TFiDFInterface {
     }
 
     @Override
-    public void compute_tfidf() throws IOException {
+    public void compute_tfidf() {
         try (Stream<String> lines = Files.lines(corpus_path)) {
             MinMaxTermsTFiDF r = lines
                     .sequential()

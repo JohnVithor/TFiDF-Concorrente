@@ -31,7 +31,7 @@ public class Serial implements TFiDFInterface {
         this.corpus_path = corpus_path;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
         java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
@@ -59,7 +59,7 @@ public class Serial implements TFiDFInterface {
     }
 
     @Override
-    public void compute_tfidf() throws IOException {
+    public void compute_tfidf() {
         double htfidf = 0.0;
         double ltfidf = Double.MAX_VALUE;
         try (BufferedReader reader = Files.newBufferedReader(this.corpus_path)) {

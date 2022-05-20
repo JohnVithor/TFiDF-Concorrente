@@ -47,7 +47,7 @@ public class Concurrent implements TFiDFInterface {
     }
 
     @Override
-    public void compute_df() throws IOException {
+    public void compute_df() {
         try (Stream<String> lines = Files.lines(corpus_path)) {
             count = lines
                     .parallel()
@@ -71,7 +71,7 @@ public class Concurrent implements TFiDFInterface {
     }
 
     @Override
-    public void compute_tfidf() throws IOException {
+    public void compute_tfidf() {
         try (Stream<String> lines = Files.lines(corpus_path)) {
             MinMaxTermsTFiDF r = lines
                     .parallel()
