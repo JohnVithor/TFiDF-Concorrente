@@ -2,6 +2,7 @@ package jv.microbenchmark;
 
 import jv.microbenchmark.runner.naive.NaiveSerialRunner;
 import jv.microbenchmark.runner.naive.ThreadConcurrentRunner;
+import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
@@ -16,6 +17,7 @@ public class Microbenchmark {
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
+                .mode(Mode.All)
                 .addProfiler(GCProfiler.class)
 //                .addProfiler(StackProfiler.class)
                 .warmupIterations(5)

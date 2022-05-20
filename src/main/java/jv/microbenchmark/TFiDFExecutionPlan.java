@@ -38,7 +38,6 @@ public class TFiDFExecutionPlan {
     public Set<String> stopwords;
     public Map<String, Long> count;
     public long n_docs;
-    public long modifiable_n_docs;
 
     @Setup(Level.Iteration)
     public void setUp() {
