@@ -2,9 +2,7 @@ package jv.tfidf.stream.collectors;
 
 import jv.records.Data;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MinMaxTermsTFiDF {
@@ -13,7 +11,8 @@ public class MinMaxTermsTFiDF {
     private Set<Data> highest_tfidfs = new HashSet<>();
     private Set<Data> lowest_tfidfs = new HashSet<>();
 
-    public MinMaxTermsTFiDF() {}
+    public MinMaxTermsTFiDF() {
+    }
 
     public double getHighest_tfidf() {
         return highest_tfidf;

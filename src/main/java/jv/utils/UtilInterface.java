@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 public interface UtilInterface {
     default Set<String> load_stop_words(String stop_words_path) {
         Set<String> result = null;
-        try(BufferedReader reader = new BufferedReader(new FileReader(stop_words_path))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(stop_words_path))) {
             result = Arrays.stream(
-                    StringUtils.split(reader.readLine(),',')
+                    StringUtils.split(reader.readLine(), ',')
             ).collect(Collectors.toUnmodifiableSet()
             );
         } catch (IOException e) {
@@ -25,15 +25,18 @@ public interface UtilInterface {
         }
         return result;
     }
+
     Document createDocument(String line, Set<String> stopwords);
+
     String normalize(String source);
+
     Set<String> setOfTerms(String line, Set<String> stopwords);
 
     default Long compute_mft(Map<String, Long> count,
-                            Long most_frequent_term_count,
-                            List<String> most_frequent_terms
+                             Long most_frequent_term_count,
+                             List<String> most_frequent_terms
     ) {
-        for (Map.Entry<String, Long> entry: count.entrySet()) {
+        for (Map.Entry<String, Long> entry : count.entrySet()) {
             if (entry.getValue() > most_frequent_term_count) {
                 most_frequent_term_count = entry.getValue();
                 most_frequent_terms.clear();

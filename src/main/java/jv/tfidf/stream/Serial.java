@@ -1,16 +1,16 @@
 package jv.tfidf.stream;
 
+import jv.records.Data;
+import jv.records.TFiDFInfo;
+import jv.tfidf.TFiDFInterface;
 import jv.tfidf.stream.collectors.MaxTermCount;
 import jv.tfidf.stream.collectors.MaxTermCountCollector;
 import jv.tfidf.stream.collectors.MinMaxTermsTFiDF;
 import jv.tfidf.stream.collectors.MinMaxTermsTFiDFCollector;
-import jv.records.Data;
-import jv.records.TFiDFInfo;
-import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -21,14 +21,20 @@ public class Serial implements TFiDFInterface {
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
+    private final Object lock = new Object();
     private Map<String, Long> count = new HashMap<>();
     private long n_docs = 0L;
-    private final Object lock = new Object();
     // statistics info
     private List<String> most_frequent_terms = new ArrayList<>();
     private Long most_frequent_term_count = 0L;
     private List<Data> highest_tfidf = new ArrayList<>();
     private List<Data> lowest_tfidf = new ArrayList<>();
+
+    public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {
+        this.stopwords = stopworlds;
+        this.util = util;
+        this.corpus_path = corpus_path;
+    }
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
@@ -37,12 +43,6 @@ public class Serial implements TFiDFInterface {
         TFiDFInterface tfidf = new jv.tfidf.stream.Serial(stopwords, util, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
-    }
-
-    public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {
-        this.stopwords = stopworlds;
-        this.util = util;
-        this.corpus_path = corpus_path;
     }
 
     @Override
@@ -70,16 +70,16 @@ public class Serial implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() throws IOException {
-        try(Stream<String> lines = Files.lines(corpus_path)) {
+        try (Stream<String> lines = Files.lines(corpus_path)) {
             MinMaxTermsTFiDF r = lines
-                .sequential()
-                .map(line -> util.createDocument(line, stopwords))
-                .flatMap(doc -> doc.counts().entrySet().stream().map(e -> {
-                    double idf = Math.log(n_docs / (double) count.get(e.getKey()));
-                    double tf = e.getValue() / (double) doc.n_terms();
-                    return new Data(e.getKey(), doc.id(), tf*idf);
-                }))
-                .collect(new MinMaxTermsTFiDFCollector());
+                    .sequential()
+                    .map(line -> util.createDocument(line, stopwords))
+                    .flatMap(doc -> doc.counts().entrySet().stream().map(e -> {
+                        double idf = Math.log(n_docs / (double) count.get(e.getKey()));
+                        double tf = e.getValue() / (double) doc.n_terms();
+                        return new Data(e.getKey(), doc.id(), tf * idf);
+                    }))
+                    .collect(new MinMaxTermsTFiDFCollector());
             this.highest_tfidf = r.getHighest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::value)).toList();
             this.lowest_tfidf = r.getLowest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::value)).toList();
         } catch (IOException e) {

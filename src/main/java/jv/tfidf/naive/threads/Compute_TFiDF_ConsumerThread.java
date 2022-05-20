@@ -6,7 +6,6 @@ import jv.utils.MyBuffer;
 import jv.utils.UtilInterface;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,11 +18,10 @@ public class Compute_TFiDF_ConsumerThread extends Thread {
     private final Map<String, Long> count;
 
     private final long n_docs;
-
-    private double htfidf;
-    private double ltfidf = Double.MAX_VALUE;
     private final ArrayList<Data> data_high = new ArrayList<>();
     private final ArrayList<Data> data_low = new ArrayList<>();
+    private double htfidf;
+    private double ltfidf = Double.MAX_VALUE;
 
     public Compute_TFiDF_ConsumerThread(MyBuffer<String> buffer,
                                         UtilInterface util,
@@ -48,10 +46,10 @@ public class Compute_TFiDF_ConsumerThread extends Thread {
                     return;
                 }
                 Document doc = util.createDocument(line, stopwords);
-                for (String key: doc.counts().keySet()) {
+                for (String key : doc.counts().keySet()) {
                     double idf = Math.log(n_docs / (double) count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
-                    Data data = new Data(key, doc.id(), tf*idf);
+                    Data data = new Data(key, doc.id(), tf * idf);
 
                     if (data.value() > htfidf) {
                         htfidf = data.value();

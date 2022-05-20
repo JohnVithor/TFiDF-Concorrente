@@ -7,4 +7,5 @@ public record TFiDFInfo(long vocabulary_size,
                         Long most_frequent_term_count,
                         Long n_docs,
                         List<Data> highest_tfidfs,
-                        List<Data> lowest_tfidfs) {}
+                        List<Data> lowest_tfidfs) {
+}

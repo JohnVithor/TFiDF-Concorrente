@@ -22,8 +22,8 @@ public class Microbenchmark {
                 .measurementIterations(10)
                 .forks(1)
                 .jvmArgs("-server"
-                        ,"-Xms2048m"
-                        ,"-Xmx2048m"
+                        , "-Xms2048m"
+                        , "-Xmx2048m"
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"

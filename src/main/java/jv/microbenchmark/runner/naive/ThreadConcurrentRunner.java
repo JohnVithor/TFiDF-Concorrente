@@ -5,16 +5,20 @@ import jv.records.Data;
 import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
 import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
 import jv.utils.MyBuffer;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ThreadConcurrentRunner {
     private final static String endLine = "__END__";
+
     @Benchmark
     public void compute_df(TFiDFExecutionPlan plan, Blackhole blackhole) {
         Long most_frequent_term_count = 0L;
@@ -30,7 +34,7 @@ public class ThreadConcurrentRunner {
             t.start();
             threads.add(t);
         }
-        try(BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
@@ -60,6 +64,7 @@ public class ThreadConcurrentRunner {
         blackhole.consume(most_frequent_term_count);
         blackhole.consume(most_frequent_terms);
     }
+
     @Benchmark
     public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf = new ArrayList<>();
@@ -73,7 +78,7 @@ public class ThreadConcurrentRunner {
             t.start();
             threads.add(t);
         }
-        try(BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 buffer.put(line);

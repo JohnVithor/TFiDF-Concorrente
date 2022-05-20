@@ -34,8 +34,8 @@ public class Compute_DF_ConsumerThread extends Thread {
                 if (line == endline) {
                     return;
                 }
-                for (String term: util.setOfTerms(line, stopwords)) {
-                    count.put(term, count.getOrDefault(term, 0L)+1L);
+                for (String term : util.setOfTerms(line, stopwords)) {
+                    count.put(term, count.getOrDefault(term, 0L) + 1L);
                 }
             }
         } catch (InterruptedException e) {

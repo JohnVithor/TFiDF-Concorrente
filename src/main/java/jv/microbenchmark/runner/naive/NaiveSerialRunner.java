@@ -1,9 +1,9 @@
 package jv.microbenchmark.runners.tfidf.naive;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
-import jv.records.Document;
 import jv.records.Data;
-import org.openjdk.jmh.annotations.*;
+import jv.records.Document;
+import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.BufferedReader;
@@ -21,12 +21,12 @@ public class NaiveSerialRunner {
         List<String> most_frequent_terms = new ArrayList<>();
         Map<String, Long> count = new HashMap<>();
         long n_docs = 0L;
-        try(BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
-                for (String term: plan.util.setOfTerms(line, plan.stopwords)) {
-                    count.put(term, count.getOrDefault(term, 0L)+1L);
+                for (String term : plan.util.setOfTerms(line, plan.stopwords)) {
+                    count.put(term, count.getOrDefault(term, 0L) + 1L);
                 }
             }
         } catch (IOException e) {
@@ -37,20 +37,21 @@ public class NaiveSerialRunner {
         blackhole.consume(most_frequent_term_count);
         blackhole.consume(most_frequent_terms);
     }
+
     @Benchmark
     public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf = new ArrayList<>();
         List<Data> lowest_tfidf = new ArrayList<>();
-        try(BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             double htfidf = 0.0;
             double ltfidf = Double.MAX_VALUE;
             String line;
             while ((line = reader.readLine()) != null) {
                 Document doc = plan.util.createDocument(line, plan.stopwords);
-                for (String key: doc.counts().keySet()) {
+                for (String key : doc.counts().keySet()) {
                     double idf = Math.log(plan.n_docs / (double) plan.count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
-                    Data data = new Data(key, doc.id(), tf*idf);
+                    Data data = new Data(key, doc.id(), tf * idf);
                     if (data.value() > htfidf) {
                         htfidf = data.value();
                         highest_tfidf.clear();

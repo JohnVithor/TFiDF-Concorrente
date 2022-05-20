@@ -12,6 +12,7 @@ public class StreamJavaUtil implements UtilInterface {
     static private final Pattern space_split = Pattern.compile("\\s+");
     static private final Pattern csv_split = Pattern.compile("\";\"");
     static private final Pattern normalize = Pattern.compile("[^\\p{L}\\d ]");
+
     public Document createDocument(String line, Set<String> stopwords) {
         String[] splits = csv_split.split(line);
         int id = Integer.parseInt(splits[0].replaceFirst("\"", ""));
@@ -32,7 +33,7 @@ public class StreamJavaUtil implements UtilInterface {
     }
 
     public Set<String> setOfTerms(String line, Set<String> stopwords) {
-        String [] splits = csv_split.split(line);
+        String[] splits = csv_split.split(line);
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
         text = normalize(text.toLowerCase());
         return Arrays.stream(space_split.split(text))

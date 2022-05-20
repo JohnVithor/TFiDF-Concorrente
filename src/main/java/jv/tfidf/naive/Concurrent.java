@@ -1,15 +1,16 @@
 package jv.tfidf.naive;
 
+import jv.records.Data;
 import jv.records.TFiDFInfo;
+import jv.tfidf.TFiDFInterface;
 import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
 import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
-import jv.utils.MyBuffer;
-import jv.records.Data;
-import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
+import jv.utils.MyBuffer;
 import jv.utils.UtilInterface;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -22,13 +23,21 @@ public class Concurrent implements TFiDFInterface {
     private final int n_threads;
     private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
-    private long n_docs = 0L;
-
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
-    private Long most_frequent_term_count = 0L;
     private final List<Data> highest_tfidf = new ArrayList<>();
     private final List<Data> lowest_tfidf = new ArrayList<>();
+    private long n_docs = 0L;
+    private Long most_frequent_term_count = 0L;
+
+    public Concurrent(Set<String> stopworlds, UtilInterface util,
+                      Path corpus_path, int n_threads, int buffer_size) {
+        this.stopwords = stopworlds;
+        this.util = util;
+        this.corpus_path = corpus_path;
+        this.n_threads = n_threads;
+        this.buffer_size = buffer_size;
+    }
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
@@ -39,15 +48,6 @@ public class Concurrent implements TFiDFInterface {
         );
         tfidf.compute();
         System.out.println(tfidf.results());
-    }
-
-    public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path, int n_threads, int buffer_size) {
-        this.stopwords = stopworlds;
-        this.util = util;
-        this.corpus_path = corpus_path;
-        this.n_threads = n_threads;
-        this.buffer_size = buffer_size;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class Concurrent implements TFiDFInterface {
             t.start();
             threads.add(t);
         }
-        try(BufferedReader reader = Files.newBufferedReader(corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
@@ -99,7 +99,7 @@ public class Concurrent implements TFiDFInterface {
             t.start();
             threads.add(t);
         }
-        try(BufferedReader reader = Files.newBufferedReader(corpus_path)) {
+        try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 buffer.put(line);
