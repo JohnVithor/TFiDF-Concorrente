@@ -1,7 +1,7 @@
 package jv.microbenchmark;
 
-import jv.microbenchmark.runners.tfidf.naive.NaiveSerialRunner;
-import jv.microbenchmark.runners.tfidf.naive.ThreadConcurrentRunner;
+import jv.microbenchmark.runner.naive.NaiveSerialRunner;
+import jv.microbenchmark.runner.naive.ThreadConcurrentRunner;
 import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;

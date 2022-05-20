@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners.tfidf.naive;
+package jv.microbenchmark.runner.naive;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;

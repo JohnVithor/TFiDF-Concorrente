@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners.tfidf.naive;
+package jv.microbenchmark.runner.naive;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
@@ -32,6 +32,9 @@ public class NaiveSerialRunner {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        most_frequent_term_count = plan.util.compute_mft(
+                count, most_frequent_term_count, most_frequent_terms
+        );
         blackhole.consume(count);
         blackhole.consume(n_docs);
         blackhole.consume(most_frequent_term_count);

@@ -1,7 +1,7 @@
 package jv.microbenchmark;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.MapType;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.ForEachJavaUtil;
 import jv.utils.UtilInterface;
@@ -9,6 +9,8 @@ import org.openjdk.jmh.annotations.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -19,11 +21,12 @@ public class TFiDFExecutionPlan {
 //    @Param({"test"})
 //    @Param({"train"})
     public String dataset;
-    //    @Param({"foreach_java", "foreach_apache"})
-    @Param({"foreach_apache"})
+
+        @Param({"foreach_java", "foreach_apache"})
+//    @Param({"foreach_apache"})
     public String stringManipulation;
 
-    @Param({"2", "4"})
+    @Param({"4"})
     public int n_threads;
 
     @Param({"1000"})
@@ -54,12 +57,13 @@ public class TFiDFExecutionPlan {
         UtilInterface util = new ForEachApacheUtil();
         stopwords = util.load_stop_words(stop_words_path);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        MapType type = objectMapper
-                .getTypeFactory()
-                .constructMapType(Map.class, String.class, Long.class);
+        Gson gson = new Gson();
+        Type empMapType = new TypeToken<Map<String, Long>>() {}.getType();
         try {
-            count = objectMapper.readValue(new File("datasets/" + dataset + ".json"), type);
+            count = gson.fromJson(Files.readString(
+                    Path.of("datasets/" + dataset + ".json")),
+                    empMapType
+            );
         } catch (IOException e) {
             System.err.println(e.getMessage());
             System.exit(-1);

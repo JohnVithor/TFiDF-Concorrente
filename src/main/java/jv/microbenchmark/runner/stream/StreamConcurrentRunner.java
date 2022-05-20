@@ -1,4 +1,4 @@
-package jv.microbenchmark.runners.tfidf.stream;
+package jv.microbenchmark.runner.stream;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
