@@ -1,3 +1,0 @@
-"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: dataset","Param: stringManipulation"
-"jv.microbenchmark.runner.BasicSerialRunner.compute_df","thrpt",1,10,"0,296200","0,014995","ops/s",devel_100_000_id,foreach_java
-"jv.microbenchmark.runner.BasicSerialRunner.compute_tfidf","thrpt",1,10,"0,283752","0,002556","ops/s",devel_100_000_id,foreach_java

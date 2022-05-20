@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 public interface TFiDFInterface {
+
     void compute_df() throws IOException;
 
     void compute_tfidf() throws IOException;
@@ -21,7 +22,7 @@ public interface TFiDFInterface {
         System.out.println(Duration.between(start, mid).toMillis());
         System.out.println(Duration.between(mid, end).toMillis());
         System.out.println(Duration.between(start, end).toMillis());
-    };
+    }
 
     TFiDFInfo results();
 }

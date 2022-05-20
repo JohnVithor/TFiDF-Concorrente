@@ -9,7 +9,6 @@ import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.mortbay.util.ajax.JSON;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -37,8 +36,7 @@ public class Serial implements TFiDFInterface {
         java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
         TFiDFInterface tfidf = new jv.tfidf.stream.Serial(stopwords, util, corpus_path);
         tfidf.compute();
-        JSON json = new JSON();
-        System.out.println(json.toJSON(tfidf.results()));
+        System.out.println(tfidf.results());
     }
 
     public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {

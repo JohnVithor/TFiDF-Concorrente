@@ -6,7 +6,6 @@ import jv.records.Document;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.mortbay.util.ajax.JSON;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -28,12 +27,11 @@ public class Serial implements TFiDFInterface {
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
-        Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
+        Set<String> stopwords = util.load_stop_words("stopwords.txt");
+        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Serial(stopwords, util, corpus_path);
         tfidf.compute();
-        JSON json = new JSON();
-        System.out.println(json.toJSON(tfidf.results()));
+        System.out.println(tfidf.results());
     }
     public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {
         this.stopwords = stopworlds;
@@ -54,15 +52,9 @@ public class Serial implements TFiDFInterface {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        for (Map.Entry<String, Long> entry: this.count.entrySet()) {
-            if (entry.getValue() > most_frequent_term_count) {
-                most_frequent_term_count = entry.getValue();
-                most_frequent_terms.clear();
-                most_frequent_terms.add(entry.getKey());
-            } else if (entry.getValue().equals(most_frequent_term_count)) {
-                most_frequent_terms.add(entry.getKey());
-            }
-        }
+        most_frequent_term_count = util.compute_mft(
+                count, most_frequent_term_count, most_frequent_terms
+        );
     }
 
     @Override

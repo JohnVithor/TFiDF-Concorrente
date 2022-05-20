@@ -1,15 +1,18 @@
 package jv.utils;
 
 import jv.records.Document;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class ForEachApacheUtil implements UtilInterface {
     public Document createDocument(String line, Set<String> stopwords) {
-        int pos = 0, end;
+        int pos = 1, end;
         end = StringUtils.indexOf(line,"\";\"", pos);
-        int id = Integer.parseInt(StringUtils.substring(line, pos, end).replaceFirst("\"", ""));
+        int id = Integer.parseInt(StringUtils.substring(line, pos, end));
         pos = end + 3;
         end = StringUtils.indexOf(line,"\";\"", pos);
         String text = StringUtils.substring(line, pos, end);

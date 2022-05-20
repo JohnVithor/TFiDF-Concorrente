@@ -1,8 +1,7 @@
 package jv.microbenchmark;
 
-import jv.microbenchmark.runner.BasicSerialRunner;
-import jv.microbenchmark.runner.ThreadConcurrentRunner;
-import org.openjdk.jmh.annotations.Mode;
+import jv.microbenchmark.runners.tfidf.naive.NaiveSerialRunner;
+import jv.microbenchmark.runners.tfidf.naive.ThreadConcurrentRunner;
 import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.results.format.ResultFormatType;
 import org.openjdk.jmh.runner.Runner;
@@ -12,16 +11,15 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                .include(BasicSerialRunner.class.getSimpleName())
-//                .include(ThreadConcurrentRunner.class.getSimpleName())
+                .include(NaiveSerialRunner.class.getSimpleName())
+                .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
-//                .addProfiler(GCProfiler.class)
+                .addProfiler(GCProfiler.class)
 //                .addProfiler(StackProfiler.class)
                 .warmupIterations(5)
                 .measurementIterations(10)
-                .mode(Mode.All)
                 .forks(1)
                 .jvmArgs("-server"
                         ,"-Xms2048m"
@@ -35,7 +33,7 @@ public class Microbenchmark {
 //                        ,"-XX:+UseZGC"
 //                        ,"-XX:+UseShenandoahGC"
                 )
-                .result("BasicSerialRunner.csv")
+                .result("results.csv")
                 .resultFormat(ResultFormatType.CSV)
                 .build();
         new Runner(opt).run();

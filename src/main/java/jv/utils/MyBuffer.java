@@ -28,4 +28,8 @@ public class MyBuffer<T> {
         notify();
         return value;
     }
+
+    public synchronized long size() {
+        return queue.size();
+    }
 }
