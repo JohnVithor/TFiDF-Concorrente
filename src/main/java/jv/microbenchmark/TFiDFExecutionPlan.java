@@ -10,10 +10,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @State(Scope.Benchmark)
-public class ExecutionPlan {
+public class TFiDFExecutionPlan {
     @Param({"devel"})
 //    @Param({"test"})
 //    @Param({"train"})

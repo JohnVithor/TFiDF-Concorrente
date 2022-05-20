@@ -1,6 +1,6 @@
 package jv.microbenchmark.runners.tfidf.stream;
 
-import jv.microbenchmark.ExecutionPlan;
+import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
 import jv.tfidf.stream.collectors.MaxTermCount;
 import jv.tfidf.stream.collectors.MaxTermCountCollector;
@@ -14,14 +14,12 @@ import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class StreamConcurrentRunner {
     @Benchmark
-    public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
+    public void compute_df(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<String> most_frequent_terms;
         Long most_frequent_term_count;
         Object lock = new Object();
@@ -52,7 +50,7 @@ public class StreamConcurrentRunner {
         blackhole.consume(most_frequent_terms);
     }
     @Benchmark
-    public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
+    public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf;
         List<Data> lowest_tfidf;
         try(Stream<String> lines = Files.lines(plan.corpus_path)) {

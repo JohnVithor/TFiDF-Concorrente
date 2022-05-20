@@ -1,6 +1,6 @@
 package jv.microbenchmark.runners.tfidf.naive;
 
-import jv.microbenchmark.ExecutionPlan;
+import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
 import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
 import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
@@ -16,7 +16,7 @@ import java.util.*;
 public class ThreadConcurrentRunner {
     private final static String endLine = "__END__";
     @Benchmark
-    public void compute_df(ExecutionPlan plan, Blackhole blackhole) {
+    public void compute_df(TFiDFExecutionPlan plan, Blackhole blackhole) {
         Long most_frequent_term_count = 0L;
         List<String> most_frequent_terms = new ArrayList<>();
         Map<String, Long> count = new HashMap<>();
@@ -61,7 +61,7 @@ public class ThreadConcurrentRunner {
         blackhole.consume(most_frequent_terms);
     }
     @Benchmark
-    public void compute_tfidf(ExecutionPlan plan, Blackhole blackhole) {
+    public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf = new ArrayList<>();
         List<Data> lowest_tfidf = new ArrayList<>();
         final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
