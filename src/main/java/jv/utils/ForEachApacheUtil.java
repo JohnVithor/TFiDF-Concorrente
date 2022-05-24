@@ -36,7 +36,7 @@ public class ForEachApacheUtil implements UtilInterface {
         for (int i = 0; i < source.length(); ++i) {
             one = source.charAt(i);
             if (Character.isLetterOrDigit(one) || Character.isSpaceChar(one)) {
-                result.append(one);
+                result.append(Character.toLowerCase(one));
             }
         }
         return result.toString();
@@ -50,7 +50,7 @@ public class ForEachApacheUtil implements UtilInterface {
         String text = StringUtils.substring(line, pos, end);
         pos = end + 3;
         text = text + " " + StringUtils.substring(line, pos, line.length());
-        text = normalize(StringUtils.lowerCase(StringUtils.chop(text)));
+        text = normalize(StringUtils.chop(text));
         Set<String> result = new HashSet<>();
         for (String term : StringUtils.split(text, ' ')) {
             if (!stopwords.contains(term) && StringUtils.isNotBlank(term)) {

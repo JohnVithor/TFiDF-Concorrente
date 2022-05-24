@@ -31,13 +31,13 @@ public class ForEachJavaUtil implements UtilInterface {
     }
 
     public String normalize(String text) {
-        return normalize.matcher(text).replaceAll("").trim();
+        return normalize.matcher(text).replaceAll("").trim().toLowerCase();
     }
 
     public Set<String> setOfTerms(String line, Set<String> stopwords) {
         String[] splits = csv_split.split(line);
         String text = splits[1] + " " + splits[2].substring(0, splits[2].length() - 1);
-        text = normalize(text.toLowerCase());
+        text = normalize(text);
         String[] terms = space_split.split(text);
         Set<String> result = new HashSet<>();
         for (String term : terms) {
