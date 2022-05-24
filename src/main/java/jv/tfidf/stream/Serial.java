@@ -38,8 +38,8 @@ public class Serial implements TFiDFInterface {
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
-        Set<String> stopwords = util.load_stop_words("datasets/stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel_100_000_id.csv");
+        Set<String> stopwords = util.load_stop_words("stopwords.txt");
+        java.nio.file.Path corpus_path = Path.of("datasets/devel.csv");
         TFiDFInterface tfidf = new jv.tfidf.stream.Serial(stopwords, util, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
