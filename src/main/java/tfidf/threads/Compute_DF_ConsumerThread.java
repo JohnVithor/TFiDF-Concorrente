@@ -1,12 +1,12 @@
-package jv.tfidf.naive.threads;
+package tfidf.threads;
 
-import jv.utils.MyBuffer;
-import jv.utils.UtilInterface;
+import utils.MyBuffer;
+import utils.UtilInterface;
 
 import java.util.HashMap;
 import java.util.Set;
 
-public class Compute_DF_ConsumerThread extends Thread {
+public class Compute_DF_ConsumerThread implements Runnable {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;

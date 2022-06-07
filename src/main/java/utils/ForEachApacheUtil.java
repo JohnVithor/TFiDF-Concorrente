@@ -1,7 +1,7 @@
-package jv.utils;
+package utils;
 
-import jv.records.Document;
 import org.apache.commons.lang3.StringUtils;
+import records.Document;
 
 import java.util.HashMap;
 import java.util.HashSet;

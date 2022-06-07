@@ -1,6 +1,6 @@
-package jv.utils;
+package utils;
 
-import jv.records.Document;
+import records.Document;
 
 import java.util.HashMap;
 import java.util.HashSet;

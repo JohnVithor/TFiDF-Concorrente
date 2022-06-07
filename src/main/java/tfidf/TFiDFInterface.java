@@ -1,10 +1,6 @@
-package jv.tfidf;
+package tfidf;
 
-import jv.records.TFiDFInfo;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.time.Instant;
+import records.TFiDFInfo;
 
 public interface TFiDFInterface {
 

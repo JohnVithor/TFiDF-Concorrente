@@ -1,7 +1,5 @@
-package jv.microbenchmark;
+package microbenchmark;
 
-import jv.microbenchmark.runner.naive.NaiveSerialRunner;
-import jv.microbenchmark.runner.naive.ThreadConcurrentRunner;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.profile.GCProfiler;
 import org.openjdk.jmh.results.format.ResultFormatType;
@@ -12,7 +10,6 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-//                .include(NaiveSerialRunner.class.getSimpleName())
                 .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
@@ -26,6 +23,7 @@ public class Microbenchmark {
                 .jvmArgs("-server"
                         , "-Xms1024m"
                         , "-Xmx1024m"
+                        , "--enable-preview"
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"

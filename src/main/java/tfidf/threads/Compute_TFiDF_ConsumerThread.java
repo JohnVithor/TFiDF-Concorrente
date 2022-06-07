@@ -1,15 +1,15 @@
-package jv.tfidf.naive.threads;
+package tfidf.threads;
 
-import jv.records.Data;
-import jv.records.Document;
-import jv.utils.MyBuffer;
-import jv.utils.UtilInterface;
+import records.Data;
+import records.Document;
+import utils.MyBuffer;
+import utils.UtilInterface;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
-public class Compute_TFiDF_ConsumerThread extends Thread {
+public class Compute_TFiDF_ConsumerThread implements Runnable {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;

@@ -1,13 +1,12 @@
-package jv.tfidf.naive;
+package tfidf;
 
-import jv.records.Data;
-import jv.records.TFiDFInfo;
-import jv.tfidf.TFiDFInterface;
-import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
-import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
-import jv.utils.ForEachApacheUtil;
-import jv.utils.MyBuffer;
-import jv.utils.UtilInterface;
+import records.Data;
+import records.TFiDFInfo;
+import tfidf.threads.Compute_DF_ConsumerThread;
+import tfidf.threads.Compute_TFiDF_ConsumerThread;
+import utils.ForEachApacheUtil;
+import utils.MyBuffer;
+import utils.UtilInterface;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,10 +38,10 @@ public class Concurrent implements TFiDFInterface {
         this.buffer_size = buffer_size;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel.csv");
+        Path corpus_path = Path.of("datasets/devel.csv");
         TFiDFInterface tfidf = new Concurrent(
                 stopwords, util, corpus_path, 4, 1000
         );
@@ -52,14 +51,15 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-        final List<Compute_DF_ConsumerThread> threads = new ArrayList<>();
+        final List<Compute_DF_ConsumerThread> runnables = new ArrayList<>();
+        final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_DF_ConsumerThread t = new Compute_DF_ConsumerThread(
+            Compute_DF_ConsumerThread r = new Compute_DF_ConsumerThread(
                     buffer, util, stopwords, endLine
             );
-            t.start();
-            threads.add(t);
+            runnables.add(r);
+            threads.add(Thread.ofVirtual().start(r));
         }
         try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
@@ -74,9 +74,9 @@ public class Concurrent implements TFiDFInterface {
             for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (Compute_DF_ConsumerThread t : threads) {
-                t.join();
-                for (Map.Entry<String, Long> pair : t.getCount().entrySet()) {
+            for (int i = 0; i < n_threads; ++i) {
+                threads.get(i).join();
+                for (Map.Entry<String, Long> pair : runnables.get(i).getCount().entrySet()) {
                     count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
                 }
             }
@@ -90,14 +90,15 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() {
-        final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
+        final List<Compute_TFiDF_ConsumerThread> runnables = new ArrayList<>();
+        final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_TFiDF_ConsumerThread t = new Compute_TFiDF_ConsumerThread(
+            Compute_TFiDF_ConsumerThread r = new Compute_TFiDF_ConsumerThread(
                     buffer, util, stopwords, endLine, count, n_docs
             );
-            t.start();
-            threads.add(t);
+            runnables.add(r);
+            threads.add(Thread.ofVirtual().start(r));
         }
         try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
@@ -113,21 +114,22 @@ public class Concurrent implements TFiDFInterface {
             }
             double htfidf_final = 0.0;
             double ltfidf_final = Double.MAX_VALUE;
-            for (Compute_TFiDF_ConsumerThread t : threads) {
-                t.join();
-                if (t.getHtfidf() > htfidf_final) {
-                    htfidf_final = t.getHtfidf();
+            for (int i = 0; i < n_threads; ++i) {
+                threads.get(i).join();
+                Compute_TFiDF_ConsumerThread r = runnables.get(i);
+                if (r.getHtfidf() > htfidf_final) {
+                    htfidf_final = r.getHtfidf();
                     highest_tfidf.clear();
-                    highest_tfidf.addAll(t.getData_high());
-                } else if (t.getHtfidf() == htfidf_final) {
-                    highest_tfidf.addAll(t.getData_high());
+                    highest_tfidf.addAll(r.getData_high());
+                } else if (r.getHtfidf() == htfidf_final) {
+                    highest_tfidf.addAll(r.getData_high());
                 }
-                if (t.getLtfidf() < ltfidf_final) {
-                    ltfidf_final = t.getLtfidf();
+                if (r.getLtfidf() < ltfidf_final) {
+                    ltfidf_final = r.getLtfidf();
                     lowest_tfidf.clear();
-                    lowest_tfidf.addAll(t.getData_low());
-                } else if (t.getLtfidf() == ltfidf_final) {
-                    lowest_tfidf.addAll(t.getData_low());
+                    lowest_tfidf.addAll(r.getData_low());
+                } else if (r.getLtfidf() == ltfidf_final) {
+                    lowest_tfidf.addAll(r.getData_low());
                 }
             }
         } catch (InterruptedException e) {

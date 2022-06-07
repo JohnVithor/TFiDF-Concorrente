@@ -1,4 +1,4 @@
-package jv.records;
+package records;
 
 import java.util.List;
 
