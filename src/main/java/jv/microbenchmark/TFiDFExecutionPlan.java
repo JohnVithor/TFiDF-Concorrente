@@ -22,11 +22,11 @@ public class TFiDFExecutionPlan {
 //    @Param({"train"})
     public String dataset;
 
-        @Param({"foreach_java", "foreach_apache"})
-//    @Param({"foreach_apache"})
+//        @Param({"foreach_java", "foreach_apache"})
+    @Param({"foreach_apache"})
     public String stringManipulation;
 
-    @Param({"4"})
+    @Param({"24"})
     public int n_threads;
 
     @Param({"1000"})
