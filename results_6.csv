@@ -1,0 +1,23 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: buffer_size","Param: dataset","Param: n_threads","Param: stringManipulation"
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df","thrpt",1,10,"2,843606","0,055844","ops/s",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.alloc.rate","thrpt",1,10,"173,653484","3,341589","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.alloc.rate.norm","thrpt",1,10,"67838752,950739","30406,025877","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Eden_Space","thrpt",1,10,"2834,942358","65,714821","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"1107477044,771429","12190668,476412","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Old_Gen","thrpt",1,10,"0,838849","0,011992","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"327744,567488","7408,596348","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Survivor_Space","thrpt",1,10,"53,571158","16,131120","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"20974200,644335","6738050,100300","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.count","thrpt",1,10,"683,000000",NaN,"counts",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_df:·gc.time","thrpt",1,10,"15183,000000",NaN,"ms",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf","thrpt",1,10,"2,354367","0,026277","ops/s",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.alloc.rate","thrpt",1,10,"126,922460","1,321256","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.alloc.rate.norm","thrpt",1,10,"59842167,033333","969,477251","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Eden_Space","thrpt",1,10,"2586,378575","26,879855","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"1219441459,200000","74990,666686","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Old_Gen","thrpt",1,10,"0,833993","0,008683","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"393216,000000","0,000000","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Survivor_Space","thrpt",1,10,"1,981389","0,066812","MB/sec",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"934214,700000","31330,145365","B/op",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.count","thrpt",1,10,"460,000000",NaN,"counts",1000,devel,6,foreach_apache
+"jv.microbenchmark.runner.naive.ThreadConcurrentRunner.compute_tfidf:·gc.time","thrpt",1,10,"2014,000000",NaN,"ms",1000,devel,6,foreach_apache
