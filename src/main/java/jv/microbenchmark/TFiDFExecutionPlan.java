@@ -17,8 +17,8 @@ import java.util.Set;
 
 @State(Scope.Benchmark)
 public class TFiDFExecutionPlan {
-    @Param({"devel"})
-//    @Param({"test"})
+//    @Param({"devel"})
+    @Param({"test"})
 //    @Param({"train"})
     public String dataset;
 
@@ -26,7 +26,7 @@ public class TFiDFExecutionPlan {
     @Param({"foreach_apache"})
     public String stringManipulation;
 
-    @Param({"24"})
+    @Param({"4"})
     public int n_threads;
 
     @Param({"1000"})

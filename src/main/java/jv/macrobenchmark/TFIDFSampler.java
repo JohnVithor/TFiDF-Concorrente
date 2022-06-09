@@ -3,7 +3,7 @@ package jv.macrobenchmark;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
-import jv.tfidf.naive.Concurrent;
+import jv.tfidf.executor.Concurrent;
 import jv.tfidf.naive.Serial;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
@@ -12,7 +12,6 @@ import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
 import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
 import org.apache.jmeter.samplers.SampleResult;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
@@ -55,6 +54,8 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
         switch (tfidf_str) {
             case "Naive Serial" -> tfidf = new Serial(selected_stopwords, util, corpus_path);
             case "Consumer-Producer Threads" ->
+                    tfidf = new jv.tfidf.naive.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
+            case "Executor" ->
                     tfidf = new Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             default -> {
                 result.sampleStart();
