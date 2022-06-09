@@ -18,12 +18,10 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class Concurrent implements TFiDFInterface {
-    static private final String endLine = "__END__";
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
     private final int n_threads;
-    private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
@@ -33,12 +31,11 @@ public class Concurrent implements TFiDFInterface {
     private Long most_frequent_term_count = 0L;
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path, int n_threads, int buffer_size) {
+                      Path corpus_path, int n_threads) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
         this.n_threads = n_threads;
-        this.buffer_size = buffer_size;
     }
 
     public static void main(String[] args) throws IOException {
@@ -46,7 +43,7 @@ public class Concurrent implements TFiDFInterface {
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
         Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, 4, 1000
+                stopwords, util, corpus_path, 4
         );
         tfidf.compute();
         System.out.println(tfidf.results());
@@ -54,7 +51,9 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-        ExecutorService executorService = Executors.newFixedThreadPool(n_threads);
+        ExecutorService executorService = new ThreadPoolExecutor(n_threads, n_threads,
+                0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(10));
         final List<Future<HashMap<String, Long>>> counts = new ArrayList<>();
         try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
