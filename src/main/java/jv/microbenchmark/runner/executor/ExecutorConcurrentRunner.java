@@ -2,10 +2,10 @@ package jv.microbenchmark.runner.executor;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
-import jv.tfidf.executor.TaskDF;
-import jv.tfidf.executor.TaskTFiDF;
-import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
-import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
+import jv.tfidf.executor.callable.TaskDFConsumer;
+import jv.tfidf.executor.callable.TaskSetOfTerms;
+import jv.tfidf.executor.callable.TaskLowerHigherTFiDF;
+import jv.tfidf.executor.callable.TaskTFiDFConsumer;
 import jv.utils.MyBuffer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class ExecutorConcurrentRunner {
+
+    private final static String endLine = "__END__";
+
     @Benchmark
     public void compute_df(TFiDFExecutionPlan plan, Blackhole blackhole) {
         Long most_frequent_term_count = 0L;
@@ -29,20 +32,29 @@ public class ExecutorConcurrentRunner {
         long n_docs = 0;
         ExecutorService executorService = Executors.newFixedThreadPool(plan.n_threads);
         final List<Future<HashMap<String, Long>>> counts = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
+        for (int i = 0; i < plan.n_threads; ++i) {
+            TaskDFConsumer t = new TaskDFConsumer(
+                    buffer, plan.util, plan.stopwords, endLine
+            );
+            counts.add(executorService.submit(t));
+        }
         try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
-                TaskDF task = new TaskDF(line, plan.util, plan.stopwords);
-                counts.add(executorService.submit(task));
+                buffer.put(line);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         try {
+            for (int i = 0; i < plan.n_threads; ++i) {
+                buffer.put(endLine);
+            }
             executorService.shutdown();
-            for (Future<HashMap<String, Long>> c : counts) {
-                for (Map.Entry<String, Long> pair : c.get().entrySet()) {
+            for (Future<HashMap<String, Long>> f : counts) {
+                for (Map.Entry<String, Long> pair : f.get().entrySet()) {
                     count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
                 }
             }
@@ -60,23 +72,32 @@ public class ExecutorConcurrentRunner {
 
     @Benchmark
     public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
-        ExecutorService executorService = Executors.newFixedThreadPool(plan.n_threads);
         List<Data> highest_tfidf = new ArrayList<>();
         List<Data> lowest_tfidf = new ArrayList<>();
+        ExecutorService executorService = Executors.newFixedThreadPool(plan.n_threads);
         final List<Future<Pair<ArrayList<Data>, ArrayList<Data>>>> dataPairs = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
+        for (int i = 0; i < plan.n_threads; ++i) {
+            TaskTFiDFConsumer t = new TaskTFiDFConsumer(
+                    buffer, plan.util, plan.stopwords, endLine, plan.count, plan.n_docs
+            );
+            dataPairs.add(executorService.submit(t));
+        }
         try (BufferedReader reader = Files.newBufferedReader(plan.corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
-                TaskTFiDF task = new TaskTFiDF(line, plan.n_docs, plan.util, plan.stopwords, plan.count);
-                dataPairs.add(executorService.submit(task));
+                buffer.put(line);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         try {
+            for (int i = 0; i < plan.n_threads; ++i) {
+                buffer.put(endLine);
+            }
+            executorService.shutdown();
             double htfidf_final = 0.0;
             double ltfidf_final = Double.MAX_VALUE;
-            executorService.shutdown();
             for (Future<Pair<ArrayList<Data>, ArrayList<Data>>> f : dataPairs) {
                 Pair<ArrayList<Data>, ArrayList<Data>> pair = f.get();
                 for (Data t: pair.getKey()) {

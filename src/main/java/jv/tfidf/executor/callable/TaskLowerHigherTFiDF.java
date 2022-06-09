@@ -1,4 +1,4 @@
-package jv.tfidf.executor;
+package jv.tfidf.executor.callable;
 
 import jv.records.Data;
 import jv.records.Document;
@@ -6,12 +6,11 @@ import jv.utils.UtilInterface;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public class TaskTFiDF implements Callable<Pair<ArrayList<Data>, ArrayList<Data>>> {
+public class TaskLowerHigherTFiDF implements Callable<Pair<ArrayList<Data>, ArrayList<Data>>> {
 
     private final String line;
     private final Long n_docs;
@@ -19,11 +18,11 @@ public class TaskTFiDF implements Callable<Pair<ArrayList<Data>, ArrayList<Data>
     private final Set<String> stopwords;
     private final Map<String, Long> count;
     
-    public TaskTFiDF(String line,
-                     Long n_docs,
-                     UtilInterface util,
-                     Set<String> stopwords,
-                     Map<String, Long> count
+    public TaskLowerHigherTFiDF(String line,
+                                Long n_docs,
+                                UtilInterface util,
+                                Set<String> stopwords,
+                                Map<String, Long> count
     ) {
         this.line = line;
         this.n_docs = n_docs;

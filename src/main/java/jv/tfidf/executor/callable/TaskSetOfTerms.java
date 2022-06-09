@@ -1,4 +1,4 @@
-package jv.tfidf.executor;
+package jv.tfidf.executor.callable;
 
 import jv.utils.UtilInterface;
 
@@ -6,15 +6,15 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-public class TaskDF implements Callable<HashMap<String, Long>> {
+public class TaskSetOfTerms implements Callable<HashMap<String, Long>> {
 
     private final String line;
     private final UtilInterface util;
     private final Set<String> stopwords;
 
-    public TaskDF(String line,
-                  UtilInterface util,
-                  Set<String> stopwords
+    public TaskSetOfTerms(String line,
+                          UtilInterface util,
+                          Set<String> stopwords
     ) {
         this.line = line;
         this.util = util;

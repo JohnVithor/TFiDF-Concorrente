@@ -3,6 +3,8 @@ package jv.tfidf.executor;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
+import jv.tfidf.executor.callable.TaskDFConsumer;
+import jv.tfidf.executor.callable.TaskTFiDFConsumer;
 import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
 import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
 import jv.utils.ForEachApacheUtil;
@@ -17,11 +19,13 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class Concurrent implements TFiDFInterface {
+public class ProducerConsumerConcurrent implements TFiDFInterface {
+    static private final String endLine = "__END__";
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
     private final int n_threads;
+    private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
@@ -30,20 +34,21 @@ public class Concurrent implements TFiDFInterface {
     private long n_docs = 0L;
     private Long most_frequent_term_count = 0L;
 
-    public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path, int n_threads) {
+    public ProducerConsumerConcurrent(Set<String> stopworlds, UtilInterface util,
+                                      Path corpus_path, int n_threads, int buffer_size) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
         this.n_threads = n_threads;
+        this.buffer_size = buffer_size;
     }
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
         Path corpus_path = Path.of("datasets/test.csv");
-        TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, 4
+        TFiDFInterface tfidf = new ProducerConsumerConcurrent(
+                stopwords, util, corpus_path, 4, 1000
         );
         tfidf.compute();
         System.out.println(tfidf.results());
@@ -51,24 +56,31 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-        ExecutorService executorService = new ThreadPoolExecutor(n_threads, n_threads,
-                0L, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(10));
+        ExecutorService executorService = Executors.newFixedThreadPool(n_threads);
         final List<Future<HashMap<String, Long>>> counts = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
+        for (int i = 0; i < n_threads; ++i) {
+            TaskDFConsumer t = new TaskDFConsumer(
+                    buffer, util, stopwords, endLine
+            );
+            counts.add(executorService.submit(t));
+        }
         try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
                 ++n_docs;
-                TaskDF task = new TaskDF(line, util, stopwords);
-                counts.add(executorService.submit(task));
+                buffer.put(line);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         try {
+            for (int i = 0; i < n_threads; ++i) {
+                buffer.put(endLine);
+            }
             executorService.shutdown();
-            for (Future<HashMap<String, Long>> c : counts) {
-                for (Map.Entry<String, Long> pair : c.get().entrySet()) {
+            for (Future<HashMap<String, Long>> f : counts) {
+                for (Map.Entry<String, Long> pair : f.get().entrySet()) {
                     count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
                 }
             }
@@ -84,19 +96,28 @@ public class Concurrent implements TFiDFInterface {
     public void compute_tfidf() {
         ExecutorService executorService = Executors.newFixedThreadPool(n_threads);
         final List<Future<Pair<ArrayList<Data>, ArrayList<Data>>>> dataPairs = new ArrayList<>();
+        final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
+        for (int i = 0; i < n_threads; ++i) {
+            TaskTFiDFConsumer t = new TaskTFiDFConsumer(
+                    buffer, util, stopwords, endLine, count, n_docs
+            );
+            dataPairs.add(executorService.submit(t));
+        }
         try (BufferedReader reader = Files.newBufferedReader(corpus_path)) {
             String line;
             while ((line = reader.readLine()) != null) {
-                TaskTFiDF task = new TaskTFiDF(line, n_docs, util, stopwords, count);
-                dataPairs.add(executorService.submit(task));
+                buffer.put(line);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         try {
+            for (int i = 0; i < n_threads; ++i) {
+                buffer.put(endLine);
+            }
+            executorService.shutdown();
             double htfidf_final = 0.0;
             double ltfidf_final = Double.MAX_VALUE;
-            executorService.shutdown();
             for (Future<Pair<ArrayList<Data>, ArrayList<Data>>> f : dataPairs) {
                 Pair<ArrayList<Data>, ArrayList<Data>> pair = f.get();
                 for (Data t: pair.getKey()) {

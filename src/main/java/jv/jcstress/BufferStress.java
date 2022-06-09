@@ -2,7 +2,7 @@ package jv.jcstress;
 
 import org.openjdk.jcstress.annotations.*;
 
-@JCStressTest
+//@JCStressTest
 @Description("Teste de buffer")
 @Outcome(id="D, D", expect = Expect.ACCEPTABLE, desc = "")
 public class BufferStress {
