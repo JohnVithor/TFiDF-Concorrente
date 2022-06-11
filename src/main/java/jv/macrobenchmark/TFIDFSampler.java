@@ -53,7 +53,8 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
         TFiDFInterface tfidf;
 
         switch (tfidf_str) {
-            case "Naive Serial" -> tfidf = new Serial(selected_stopwords, util, corpus_path);
+            case "Naive Serial" ->
+                    tfidf = new Serial(selected_stopwords, util, corpus_path);
             case "Consumer-Producer Threads" ->
                     tfidf = new jv.tfidf.naive.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             case "Small Task" ->
