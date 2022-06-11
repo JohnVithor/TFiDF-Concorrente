@@ -1,0 +1,13 @@
+// Executor
+10913
+6205
+17119
+TFiDFInfo[vocabulary_size=491669, most_frequent_terms=[book], most_frequent_term_count=100047, n_docs=400000, highest_tfidfs=[Data[term=qqq, doc_id=18753, value=8.616051279197771]], lowest_tfidfs=[Data[term=book, doc_id=361312, value=0.011548537262794126]]]
+
+
+// Threads
+8944
+6066
+15011
+TFiDFInfo[vocabulary_size=491669, most_frequent_terms=[book], most_frequent_term_count=100047, n_docs=400000, highest_tfidfs=[Data[term=qqq, doc_id=18753, value=8.616051279197771]], lowest_tfidfs=[Data[term=book, doc_id=361312, value=0.011548537262794126]]]
+

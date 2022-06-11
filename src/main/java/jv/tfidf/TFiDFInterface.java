@@ -13,15 +13,15 @@ public interface TFiDFInterface {
     void compute_tfidf();
 
     default void compute() {
-//        Instant start = Instant.now();
+        Instant start = Instant.now();
         compute_df();
-//        Instant mid = Instant.now();
+        Instant mid = Instant.now();
         compute_tfidf();
-//        Instant end = Instant.now();
+        Instant end = Instant.now();
 
-//        System.out.println(Duration.between(start, mid).toMillis());
-//        System.out.println(Duration.between(mid, end).toMillis());
-//        System.out.println(Duration.between(start, end).toMillis());
+        System.out.println(Duration.between(start, mid).toMillis());
+        System.out.println(Duration.between(mid, end).toMillis());
+        System.out.println(Duration.between(start, end).toMillis());
     }
 
     TFiDFInfo results();
