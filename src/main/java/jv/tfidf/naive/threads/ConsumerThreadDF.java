@@ -6,7 +6,7 @@ import jv.utils.UtilInterface;
 import java.util.HashMap;
 import java.util.Set;
 
-public class Compute_DF_ConsumerThread extends Thread {
+public class ConsumerThreadDF extends Thread {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;
@@ -15,10 +15,10 @@ public class Compute_DF_ConsumerThread extends Thread {
 
     private final HashMap<String, Long> count;
 
-    public Compute_DF_ConsumerThread(MyBuffer<String> buffer,
-                                     UtilInterface util,
-                                     Set<String> stopwords,
-                                     String endline) {
+    public ConsumerThreadDF(MyBuffer<String> buffer,
+                            UtilInterface util,
+                            Set<String> stopwords,
+                            String endline) {
         this.buffer = buffer;
         this.util = util;
         this.stopwords = stopwords;

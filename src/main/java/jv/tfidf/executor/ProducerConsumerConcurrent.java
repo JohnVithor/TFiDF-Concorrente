@@ -5,8 +5,6 @@ import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
 import jv.tfidf.executor.callable.TaskDFConsumer;
 import jv.tfidf.executor.callable.TaskTFiDFConsumer;
-import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
-import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.MyBuffer;
 import jv.utils.UtilInterface;

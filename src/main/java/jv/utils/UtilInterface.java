@@ -32,8 +32,8 @@ public interface UtilInterface {
 
     Set<String> setOfTerms(String line, Set<String> stopwords);
 
-    default Long compute_mft(Map<String, Long> count,
-                             Long most_frequent_term_count,
+    default long compute_mft(Map<String, Long> count,
+                             long most_frequent_term_count,
                              List<String> most_frequent_terms
     ) {
         for (Map.Entry<String, Long> entry : count.entrySet()) {

@@ -2,8 +2,8 @@ package jv.microbenchmark.runner.naive;
 
 import jv.microbenchmark.TFiDFExecutionPlan;
 import jv.records.Data;
-import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
-import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
+import jv.tfidf.naive.threads.ConsumerThreadDF;
+import jv.tfidf.naive.threads.ConsumerThreadTFiDF;
 import jv.utils.MyBuffer;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
@@ -25,10 +25,10 @@ public class ThreadConcurrentRunner {
         List<String> most_frequent_terms = new ArrayList<>();
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
-        final List<Compute_DF_ConsumerThread> threads = new ArrayList<>();
+        final List<ConsumerThreadDF> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
         for (int i = 0; i < plan.n_threads; ++i) {
-            Compute_DF_ConsumerThread t = new Compute_DF_ConsumerThread(
+            ConsumerThreadDF t = new ConsumerThreadDF(
                     buffer, plan.util, plan.stopwords, endLine
             );
             t.start();
@@ -47,7 +47,7 @@ public class ThreadConcurrentRunner {
             for (int i = 0; i < plan.n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (Compute_DF_ConsumerThread t : threads) {
+            for (ConsumerThreadDF t : threads) {
                 t.join();
                 for (Map.Entry<String, Long> pair : t.getCount().entrySet()) {
                     count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
@@ -69,10 +69,10 @@ public class ThreadConcurrentRunner {
     public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf = new ArrayList<>();
         List<Data> lowest_tfidf = new ArrayList<>();
-        final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
+        final List<ConsumerThreadTFiDF> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
         for (int i = 0; i < plan.n_threads; ++i) {
-            Compute_TFiDF_ConsumerThread t = new Compute_TFiDF_ConsumerThread(
+            ConsumerThreadTFiDF t = new ConsumerThreadTFiDF(
                     buffer, plan.util, plan.stopwords, endLine, plan.count, plan.n_docs
             );
             t.start();
@@ -92,7 +92,7 @@ public class ThreadConcurrentRunner {
             }
             double htfidf_final = 0.0;
             double ltfidf_final = Double.MAX_VALUE;
-            for (Compute_TFiDF_ConsumerThread t : threads) {
+            for (ConsumerThreadTFiDF t : threads) {
                 t.join();
                 if (t.getHtfidf() > htfidf_final) {
                     htfidf_final = t.getHtfidf();

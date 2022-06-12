@@ -18,11 +18,11 @@ public class Serial implements TFiDFInterface {
     private final UtilInterface util;
     private final Path corpus_path;
     private final Map<String, Long> count = new HashMap<>();
+    private long n_docs = 0L;
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
     private final List<Data> highest_tfidf = new ArrayList<>();
     private final List<Data> lowest_tfidf = new ArrayList<>();
-    private long n_docs = 0L;
     private Long most_frequent_term_count = 0L;
 
     public Serial(Set<String> stopworlds, UtilInterface util, Path corpus_path) {

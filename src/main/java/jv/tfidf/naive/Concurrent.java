@@ -3,8 +3,8 @@ package jv.tfidf.naive;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
-import jv.tfidf.naive.threads.Compute_DF_ConsumerThread;
-import jv.tfidf.naive.threads.Compute_TFiDF_ConsumerThread;
+import jv.tfidf.naive.threads.ConsumerThreadDF;
+import jv.tfidf.naive.threads.ConsumerThreadTFiDF;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.MyBuffer;
 import jv.utils.UtilInterface;
@@ -23,16 +23,16 @@ public class Concurrent implements TFiDFInterface {
     private final int n_threads;
     private final int buffer_size;
     private final Map<String, Long> count = new HashMap<>();
+    private long n_docs = 0L;
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
     private final List<Data> highest_tfidf = new ArrayList<>();
     private final List<Data> lowest_tfidf = new ArrayList<>();
-    private long n_docs = 0L;
-    private Long most_frequent_term_count = 0L;
+    private long most_frequent_term_count = 0L;
 
-    public Concurrent(Set<String> stopworlds, UtilInterface util,
+    public Concurrent(Set<String> stopwords, UtilInterface util,
                       Path corpus_path, int n_threads, int buffer_size) {
-        this.stopwords = stopworlds;
+        this.stopwords = stopwords;
         this.util = util;
         this.corpus_path = corpus_path;
         this.n_threads = n_threads;
@@ -52,10 +52,10 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-        final List<Compute_DF_ConsumerThread> threads = new ArrayList<>();
+        final List<ConsumerThreadDF> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_DF_ConsumerThread t = new Compute_DF_ConsumerThread(
+            ConsumerThreadDF t = new ConsumerThreadDF(
                     buffer, util, stopwords, endLine
             );
             t.start();
@@ -74,7 +74,7 @@ public class Concurrent implements TFiDFInterface {
             for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (Compute_DF_ConsumerThread t : threads) {
+            for (ConsumerThreadDF t : threads) {
                 t.join();
                 for (Map.Entry<String, Long> pair : t.getCount().entrySet()) {
                     count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
@@ -90,10 +90,10 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() {
-        final List<Compute_TFiDF_ConsumerThread> threads = new ArrayList<>();
+        final List<ConsumerThreadTFiDF> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_TFiDF_ConsumerThread t = new Compute_TFiDF_ConsumerThread(
+            ConsumerThreadTFiDF t = new ConsumerThreadTFiDF(
                     buffer, util, stopwords, endLine, count, n_docs
             );
             t.start();
@@ -113,7 +113,7 @@ public class Concurrent implements TFiDFInterface {
             }
             double htfidf_final = 0.0;
             double ltfidf_final = Double.MAX_VALUE;
-            for (Compute_TFiDF_ConsumerThread t : threads) {
+            for (ConsumerThreadTFiDF t : threads) {
                 t.join();
                 if (t.getHtfidf() > htfidf_final) {
                     htfidf_final = t.getHtfidf();

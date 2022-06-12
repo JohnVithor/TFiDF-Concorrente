@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
-public class Compute_TFiDF_ConsumerThread extends Thread {
+public class ConsumerThreadTFiDF extends Thread {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;
@@ -23,12 +23,12 @@ public class Compute_TFiDF_ConsumerThread extends Thread {
     private double htfidf;
     private double ltfidf = Double.MAX_VALUE;
 
-    public Compute_TFiDF_ConsumerThread(MyBuffer<String> buffer,
-                                        UtilInterface util,
-                                        Set<String> stopwords,
-                                        String endline,
-                                        Map<String, Long> count,
-                                        long n_docs) {
+    public ConsumerThreadTFiDF(MyBuffer<String> buffer,
+                               UtilInterface util,
+                               Set<String> stopwords,
+                               String endline,
+                               Map<String, Long> count,
+                               long n_docs) {
         this.buffer = buffer;
         this.util = util;
         this.stopwords = stopwords;
@@ -50,25 +50,28 @@ public class Compute_TFiDF_ConsumerThread extends Thread {
                     double idf = Math.log(n_docs / (double) count.get(key));
                     double tf = doc.counts().get(key) / (double) doc.n_terms();
                     Data data = new Data(key, doc.id(), tf * idf);
-
-                    if (data.value() > htfidf) {
-                        htfidf = data.value();
-                        data_high.clear();
-                        data_high.add(data);
-                    } else if (data.value() == htfidf) {
-                        data_high.add(data);
-                    }
-                    if (data.value() < ltfidf) {
-                        ltfidf = data.value();
-                        data_low.clear();
-                        data_low.add(data);
-                    } else if (data.value() == ltfidf) {
-                        data_low.add(data);
-                    }
+                    findMaxMin(data);
                 }
             }
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void findMaxMin(Data data) {
+        if (data.value() > htfidf) {
+            htfidf = data.value();
+            data_high.clear();
+            data_high.add(data);
+        } else if (data.value() == htfidf) {
+            data_high.add(data);
+        }
+        if (data.value() < ltfidf) {
+            ltfidf = data.value();
+            data_low.clear();
+            data_low.add(data);
+        } else if (data.value() == ltfidf) {
+            data_low.add(data);
         }
     }
 
