@@ -1,3 +1,9 @@
+// Serial - Train
+47421
+47351
+94773
+TFiDFInfo[vocabulary_size=2328897, most_frequent_terms=[book], most_frequent_term_count=902838, n_docs=3600000, highest_tfidfs=[Data[term=morethink, doc_id=135468, value=14.403297222866392]], lowest_tfidfs=[Data[term=book, doc_id=817017, value=0.011430958587727554], Data[term=book, doc_id=2778979, value=0.011430958587727554]]]
+
 // Executor
 10913
 6205

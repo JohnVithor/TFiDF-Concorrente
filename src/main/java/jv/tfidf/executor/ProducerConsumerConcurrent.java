@@ -44,9 +44,9 @@ public class ProducerConsumerConcurrent implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        Path corpus_path = Path.of("datasets/test.csv");
+        Path corpus_path = Path.of("datasets/train.csv");
         TFiDFInterface tfidf = new ProducerConsumerConcurrent(
-                stopwords, util, corpus_path, 4, 1000
+                stopwords, util, corpus_path, 12, 1000
         );
         tfidf.compute();
         System.out.println(tfidf.results());
