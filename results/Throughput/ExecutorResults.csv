@@ -1,0 +1,25 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: buffer_size","Param: dataset","Param: n_threads","Param: stringManipulation"
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df","thrpt",1,10,"0,084898","0,000502","ops/s",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.alloc.rate","thrpt",1,10,"173,171699","0,988551","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.alloc.rate.norm","thrpt",1,10,"2652323501,600000","38256,744926","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Eden_Space","thrpt",1,10,"2604,048854","14,070380","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"39884056164,800000","78415525,737331","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Old_Gen","thrpt",1,10,"6,660933","0,040071","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"102020044,800000","372214,372767","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Survivor_Space","thrpt",1,10,"15,137374","0,277969","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"231850330,400000","4590468,060023","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.count","thrpt",1,10,"450,000000",NaN,"counts",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·gc.time","thrpt",1,10,"18679,000000",NaN,"ms",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_df:·stack","thrpt",1,1,NaN,NaN,"---",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf","thrpt",1,10,"0,063346","0,000276","ops/s",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.alloc.rate","thrpt",1,10,"130,215048","0,554381","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.alloc.rate.norm","thrpt",1,10,"2537710052,800000","31771,158455","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Eden_Space","thrpt",1,10,"2182,752959","11,756361","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Eden_Space.norm","thrpt",1,10,"42538840883,200000","157145889,310025","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Old_Gen","thrpt",1,10,"7,175441","0,031890","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Old_Gen.norm","thrpt",1,10,"139839436,800000","296124,927775","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Survivor_Space","thrpt",1,10,"8,419290","0,056495","MB/sec",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.churn.G1_Survivor_Space.norm","thrpt",1,10,"164079843,200000","622768,507768","B/op",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.count","thrpt",1,10,"394,000000",NaN,"counts",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·gc.time","thrpt",1,10,"3217,000000",NaN,"ms",1000,train,12,foreach_apache
+"jv.microbenchmark.runner.executor.ExecutorConcurrentRunner.compute_tfidf:·stack","thrpt",1,1,NaN,NaN,"---",1000,train,12,foreach_apache
