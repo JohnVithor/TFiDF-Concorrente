@@ -1,0 +1,4 @@
+Threads;GC;Milliseconds;Throughput1;Throughput2
+01;ZGC;104169;0.009599674379045063;34.6/hour
+01;G1GC;93474;0.01069807049600534;38.5/hour
+
