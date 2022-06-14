@@ -15,10 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Concurrent implements TFiDFInterface {
@@ -48,7 +45,7 @@ public class Concurrent implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        Path corpus_path = Path.of("datasets/test.csv");
+        Path corpus_path = Path.of("datasets/train.csv");
         TFiDFInterface tfidf = new Concurrent(
                 stopwords, util, corpus_path, 4, 1000
         );
@@ -148,8 +145,8 @@ public class Concurrent implements TFiDFInterface {
     @Override
     public TFiDFInfo results() {
         this.most_frequent_terms.sort(String::compareTo);
-        this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
-        this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
+        this.highest_tfidf.sort(Comparator.comparingDouble(Data::doc_id));
+        this.lowest_tfidf.sort(Comparator.comparingDouble(Data::doc_id));
         return new TFiDFInfo(
                 this.count.size(),
                 this.most_frequent_terms,
