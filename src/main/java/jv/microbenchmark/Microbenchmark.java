@@ -15,12 +15,12 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-//                .include(NaiveSerialRunner.class.getSimpleName())
+                .include(NaiveSerialRunner.class.getSimpleName())
                 .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
-//                .include(ExecutorConcurrentRunner.class.getSimpleName())
-//                .include(AtomicConcurrentRunner.class.getSimpleName())
+                .include(ExecutorConcurrentRunner.class.getSimpleName())
+                .include(AtomicConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
                 .mode(Mode.Throughput)
                 .addProfiler(GCProfiler.class)
@@ -29,12 +29,12 @@ public class Microbenchmark {
                 .measurementIterations(10)
                 .forks(1)
                 .jvmArgs("-server"
-                        , "-Xms2048m"
-                        , "-Xmx2048m"
+                        , "-Xms2g"
+                        , "-Xmx2g"
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"
-//                        ,"-XX:+UseG1GC"
+                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseStringDeduplication"
 //                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseZGC"
