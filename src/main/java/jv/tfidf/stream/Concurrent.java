@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +24,7 @@ public class Concurrent implements TFiDFInterface {
     private final Path corpus_path;
     private final Object lock = new Object();
     private Map<String, Long> count = new HashMap<>();
-    private long n_docs = 0L;
+    private final LongAdder n_docs = new LongAdder();
     // statistics info
     private List<String> most_frequent_terms = new ArrayList<>();
     private Long most_frequent_term_count = 0L;
@@ -52,9 +53,7 @@ public class Concurrent implements TFiDFInterface {
             count = lines
                     .parallel()
                     .peek(s -> {
-                        synchronized (lock) {
-                            ++n_docs;
-                        }
+                        n_docs.increment();
                     })
                     .flatMap(line -> util.setOfTerms(line, stopwords).stream())
                     .collect(Collectors.groupingBy(token -> token,
@@ -72,12 +71,13 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() {
+        final double dn_docs = n_docs.doubleValue();
         try (Stream<String> lines = Files.lines(corpus_path)) {
             MinMaxTermsTFiDF r = lines
                     .parallel()
                     .map(line -> util.createDocument(line, stopwords))
                     .flatMap(doc -> doc.counts().entrySet().stream().map(e -> {
-                        double idf = Math.log(n_docs / (double) count.get(e.getKey()));
+                        double idf = Math.log(dn_docs / (double) count.get(e.getKey()));
                         double tf = e.getValue() / (double) doc.n_terms();
                         return new Data(e.getKey(), doc.id(), tf * idf);
                     }))
@@ -95,7 +95,7 @@ public class Concurrent implements TFiDFInterface {
                 this.count.size(),
                 this.most_frequent_terms,
                 this.most_frequent_term_count,
-                this.n_docs,
+                this.n_docs.longValue(),
                 this.highest_tfidf,
                 this.lowest_tfidf);
     }
