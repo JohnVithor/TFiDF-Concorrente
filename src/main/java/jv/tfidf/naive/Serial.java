@@ -94,8 +94,8 @@ public class Serial implements TFiDFInterface {
     @Override
     public TFiDFInfo results() {
         this.most_frequent_terms.sort(String::compareTo);
-        this.highest_tfidf.sort(Comparator.comparingDouble(Data::value));
-        this.lowest_tfidf.sort(Comparator.comparingDouble(Data::value));
+        this.highest_tfidf.sort(Comparator.comparingDouble(Data::doc_id));
+        this.lowest_tfidf.sort(Comparator.comparingDouble(Data::doc_id));
         return new TFiDFInfo(
                 this.count.size(),
                 this.most_frequent_terms,

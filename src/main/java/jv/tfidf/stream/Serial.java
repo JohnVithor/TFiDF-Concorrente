@@ -80,8 +80,8 @@ public class Serial implements TFiDFInterface {
                         return new Data(e.getKey(), doc.id(), tf * idf);
                     }))
                     .collect(new MinMaxTermsTFiDFCollector());
-            this.highest_tfidf = r.getHighest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::value)).toList();
-            this.lowest_tfidf = r.getLowest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::value)).toList();
+            this.highest_tfidf = r.getHighest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::doc_id)).toList();
+            this.lowest_tfidf = r.getLowest_tfidfs().stream().sorted(Comparator.comparingDouble(Data::doc_id)).toList();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
