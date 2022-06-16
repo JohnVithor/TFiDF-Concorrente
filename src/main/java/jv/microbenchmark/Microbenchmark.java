@@ -40,7 +40,7 @@ public class Microbenchmark {
 //                        ,"-XX:+UseZGC"
 //                        ,"-XX:+UseShenandoahGC"
                 )
-                .result("results.csv")
+                .result("Sresults.csv")
                 .resultFormat(ResultFormatType.CSV)
                 .build();
         new Runner(opt).run();

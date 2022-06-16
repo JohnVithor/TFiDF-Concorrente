@@ -26,7 +26,7 @@ public class TFiDFExecutionPlan {
     @Param({"foreach_apache"})
     public String stringManipulation;
 
-    @Param({"4"})
+    @Param({"1"})
     public int n_threads;
 
     @Param({"1000"})
