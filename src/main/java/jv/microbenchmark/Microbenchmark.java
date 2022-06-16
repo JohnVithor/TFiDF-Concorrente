@@ -34,10 +34,10 @@ public class Microbenchmark {
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"
-                        ,"-XX:+UseG1GC"
+//                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseStringDeduplication"
 //                        ,"-XX:+UnlockExperimentalVMOptions"
-//                        ,"-XX:+UseZGC"
+                        ,"-XX:+UseZGC"
 //                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("Sresults.csv")
