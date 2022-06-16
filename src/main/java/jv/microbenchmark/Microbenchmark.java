@@ -16,11 +16,11 @@ public class Microbenchmark {
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
                 .include(NaiveSerialRunner.class.getSimpleName())
-                .include(ThreadConcurrentRunner.class.getSimpleName())
+//                .include(ThreadConcurrentRunner.class.getSimpleName())
 //                .include(StreamSerialRunner.class.getSimpleName())
 //                .include(StreamConcurrentRunner.class.getSimpleName())
-                .include(ExecutorConcurrentRunner.class.getSimpleName())
-                .include(AtomicConcurrentRunner.class.getSimpleName())
+//                .include(ExecutorConcurrentRunner.class.getSimpleName())
+//                .include(AtomicConcurrentRunner.class.getSimpleName())
                 .shouldDoGC(true)
                 .mode(Mode.Throughput)
                 .addProfiler(GCProfiler.class)
@@ -37,8 +37,8 @@ public class Microbenchmark {
 //                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseStringDeduplication"
 //                        ,"-XX:+UnlockExperimentalVMOptions"
-                        ,"-XX:+UseZGC"
-//                        ,"-XX:+UseShenandoahGC"
+//                        ,"-XX:+UseZGC"
+                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("Sresults.csv")
                 .resultFormat(ResultFormatType.CSV)
