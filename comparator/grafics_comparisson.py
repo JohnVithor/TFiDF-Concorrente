@@ -24,6 +24,16 @@ dados.reset_index(inplace=True, drop=True)
 dados.Score = dados.Score.str.replace(',', '.').astype(float)
 dados.Benchmark = dados.Benchmark.str.removeprefix("jv.microbenchmark.runner.")
 dados["Class"] = dados.Benchmark.str.split(".").str[1]
+
+classes = [
+    "NaiveSerialRunner",
+    "ThreadConcurrentRunner",
+    # "ExecutorConcurrentRunner",
+    # "AtomicConcurrentRunner",
+    ]
+
+dados = dados[dados["Class"].isin(classes)]
+
 dados["Benchmark"] = dados.Benchmark.str.split("Runner.").str[1]
 dados["Threads"] = dados["Param: n_threads"].astype(int)
 dados.dropna(subset = ['Score'], inplace=True)
