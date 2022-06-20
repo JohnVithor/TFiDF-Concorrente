@@ -16,16 +16,16 @@ import java.util.Set;
 
 @State(Scope.Benchmark)
 public class TFiDFExecutionPlan {
-    @Param({"devel"})
-//    @Param({"test"})
+//    @Param({"devel"})
+    @Param({"test"})
 //    @Param({"train"})
     public String dataset;
 
-//        @Param({"foreach_java", "foreach_apache"})
+//    @Param({"foreach_java", "foreach_apache"})
     @Param({"foreach_apache"})
     public String stringManipulation;
 
-    @Param({"6"})
+    @Param({"1", "2", "4", "6", "8", "12"})
     public int n_threads;
 
     @Param({"1000"})
@@ -35,6 +35,7 @@ public class TFiDFExecutionPlan {
     public String stop_words_path = "stopwords.txt";
     public Path corpus_path;
     public Set<String> stopwords;
+
     public Map<String, Long> count;
     public long n_docs;
 
