@@ -41,7 +41,7 @@ public class Concurrent implements TFiDFInterface {
     public static void main(String[] args) {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        Path corpus_path = Path.of("datasets/devel.csv");
+        Path corpus_path = Path.of("datasets/train.csv");
         TFiDFInterface tfidf = new Concurrent(
                 stopwords, util, corpus_path, 12, 1000
         );

@@ -25,13 +25,12 @@ public class Microbenchmark {
                         , "-Xms1024m"
                         , "-Xmx1024m"
                         , "--enable-preview"
+                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"
 //                        ,"-XX:+UseG1GC"
-//                        ,"-XX:+UseStringDeduplication"
-//                        ,"-XX:+UnlockExperimentalVMOptions"
-                        ,"-XX:+UseZGC"
+//                        ,"-XX:+UseZGC"
 //                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("loomresults.csv")
