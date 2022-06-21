@@ -79,6 +79,7 @@ public class Concurrent implements TFiDFInterface {
             JoinHashTask join = new JoinHashTask(threads);
             ForkJoinPool pool = ForkJoinPool.commonPool();
             count = pool.invoke(join);
+            pool.shutdown();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -115,6 +116,7 @@ public class Concurrent implements TFiDFInterface {
             Pair<List<Data>, List<Data>> pair = pool.invoke(join);
             highest_tfidf = pair.getKey();
             lowest_tfidf = pair.getValue();
+            pool.shutdown();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }

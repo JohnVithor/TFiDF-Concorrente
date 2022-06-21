@@ -14,7 +14,7 @@ public class JoinTFiDFTask extends RecursiveTask<Pair<List<Data>, List<Data>>> {
 
     private final List<ConsumerThreadTFiDF> threads;
 
-    JoinTFiDFTask(List<ConsumerThreadTFiDF> threads) {
+    public JoinTFiDFTask(List<ConsumerThreadTFiDF> threads) {
         this.threads = threads;
     }
 

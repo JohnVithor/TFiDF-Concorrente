@@ -11,7 +11,7 @@ public class JoinHashTask extends RecursiveTask<HashMap<String, Long>> {
 
     private final List<ConsumerThreadDF> threads;
 
-    JoinHashTask(List<ConsumerThreadDF> threads) {
+    public JoinHashTask(List<ConsumerThreadDF> threads) {
         this.threads = threads;
     }
 

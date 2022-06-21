@@ -1,6 +1,5 @@
 package jv.macrobenchmark;
 
-import jv.microbenchmark.runner.atomic.AtomicConcurrentRunner;
 import jv.records.Data;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
@@ -64,7 +63,9 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
             case "Big Task" ->
                     tfidf = new ProducerConsumerConcurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             case "Atomic Concurrent" ->
-                    tfidf = new Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
+                    tfidf = new jv.tfidf.atomic.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
+            case "ForkJoin Concurrent" ->
+                    tfidf = new jv.tfidf.forkjoin.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             default -> {
                 result.sampleStart();
                 result.sampleEnd();

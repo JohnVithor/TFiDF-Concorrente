@@ -31,14 +31,14 @@ public class Microbenchmark {
                 .jvmArgs("-server"
                         , "-Xms2g"
                         , "-Xmx2g"
+                        ,"-XX:+UnlockExperimentalVMOptions"
 //                        ,"-XX:+UseSerialGC"
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"
-//                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseStringDeduplication"
-//                        ,"-XX:+UnlockExperimentalVMOptions"
+//                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseZGC"
-                        ,"-XX:+UseShenandoahGC"
+//                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("Sresults.csv")
                 .resultFormat(ResultFormatType.CSV)

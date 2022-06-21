@@ -18,12 +18,12 @@ import java.util.Set;
 @State(Scope.Benchmark)
 public class TFiDFExecutionPlan {
 //    @Param({"devel"})
-//    @Param({"test"})
-    @Param({"train"})
+    @Param({"test"})
+//    @Param({"train"})
     public String dataset;
 
-    @Param({"foreach_java", "foreach_apache"})
-//    @Param({"foreach_apache"})
+//    @Param({"foreach_java", "foreach_apache"})
+    @Param({"foreach_apache"})
     public String stringManipulation;
 
     @Param({"1"})
