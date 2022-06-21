@@ -1,4 +1,4 @@
-package jv.tfidf.naive;
+package jv.tfidf.forkjoin;
 
 import jv.records.Data;
 import jv.records.TFiDFInfo;
@@ -8,12 +8,14 @@ import jv.tfidf.naive.threads.ConsumerThreadTFiDF;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.MyBuffer;
 import jv.utils.UtilInterface;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 
 public class Concurrent implements TFiDFInterface {
     static private final String endLine = "__END__";
@@ -22,12 +24,12 @@ public class Concurrent implements TFiDFInterface {
     private final Path corpus_path;
     private final int n_threads;
     private final int buffer_size;
-    private final Map<String, Long> count = new HashMap<>();
+    private Map<String, Long> count = new HashMap<>();
     private long n_docs = 0L;
     // statistics info
     private final List<String> most_frequent_terms = new ArrayList<>();
-    private final List<Data> highest_tfidf = new ArrayList<>();
-    private final List<Data> lowest_tfidf = new ArrayList<>();
+    private List<Data> highest_tfidf = new ArrayList<>();
+    private List<Data> lowest_tfidf = new ArrayList<>();
     private long most_frequent_term_count = 0L;
 
     public Concurrent(Set<String> stopwords, UtilInterface util,
@@ -42,7 +44,7 @@ public class Concurrent implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
+        Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Concurrent(
                 stopwords, util, corpus_path, 4, 1000
         );
@@ -74,12 +76,9 @@ public class Concurrent implements TFiDFInterface {
             for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            for (ConsumerThreadDF t : threads) {
-                t.join();
-                for (Map.Entry<String, Long> pair : t.getCount().entrySet()) {
-                    count.put(pair.getKey(), count.getOrDefault(pair.getKey(), 0L) + pair.getValue());
-                }
-            }
+            JoinHashTask join = new JoinHashTask(threads);
+            ForkJoinPool pool = ForkJoinPool.commonPool();
+            count = pool.invoke(join);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -111,25 +110,11 @@ public class Concurrent implements TFiDFInterface {
             for (int i = 0; i < n_threads; ++i) {
                 buffer.put(endLine);
             }
-            double htfidf_final = 0.0;
-            double ltfidf_final = Double.MAX_VALUE;
-            for (ConsumerThreadTFiDF t : threads) {
-                t.join();
-                if (t.getHtfidf() > htfidf_final) {
-                    htfidf_final = t.getHtfidf();
-                    highest_tfidf.clear();
-                    highest_tfidf.addAll(t.getData_high());
-                } else if (t.getHtfidf() == htfidf_final) {
-                    highest_tfidf.addAll(t.getData_high());
-                }
-                if (t.getLtfidf() < ltfidf_final) {
-                    ltfidf_final = t.getLtfidf();
-                    lowest_tfidf.clear();
-                    lowest_tfidf.addAll(t.getData_low());
-                } else if (t.getLtfidf() == ltfidf_final) {
-                    lowest_tfidf.addAll(t.getData_low());
-                }
-            }
+            JoinTFiDFTask join = new JoinTFiDFTask(threads);
+            ForkJoinPool pool = ForkJoinPool.commonPool();
+            Pair<List<Data>, List<Data>> pair = pool.invoke(join);
+            highest_tfidf = pair.getKey();
+            lowest_tfidf = pair.getValue();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
