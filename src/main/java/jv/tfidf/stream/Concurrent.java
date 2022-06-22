@@ -22,7 +22,6 @@ public class Concurrent implements TFiDFInterface {
     private final Set<String> stopwords;
     private final UtilInterface util;
     private final Path corpus_path;
-    private final Object lock = new Object();
     private Map<String, Long> count = new HashMap<>();
     private final LongAdder n_docs = new LongAdder();
     // statistics info
@@ -41,7 +40,7 @@ public class Concurrent implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/devel.csv");
+        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
         TFiDFInterface tfidf = new Concurrent(stopwords, util, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
@@ -52,9 +51,7 @@ public class Concurrent implements TFiDFInterface {
         try (Stream<String> lines = Files.lines(corpus_path)) {
             count = lines
                     .parallel()
-                    .peek(s -> {
-                        n_docs.increment();
-                    })
+                    .peek(s -> n_docs.increment())
                     .flatMap(line -> util.setOfTerms(line, stopwords).stream())
                     .collect(Collectors.groupingBy(token -> token,
                             Collectors.counting())
