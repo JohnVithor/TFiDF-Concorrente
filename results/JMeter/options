@@ -1,3 +1,6 @@
 Naive Serial
-Consumer-Producer Threads
-Big Task
+Threads Concurrent
+Executor Concurrent
+Atomic Concurrent
+ForkJoin Concurrent
+Stream Concurrent
