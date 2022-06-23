@@ -31,17 +31,18 @@ public class Concurrent implements TFiDFInterface {
     private List<Data> lowest_tfidf = new ArrayList<>();
 
     public Concurrent(Set<String> stopworlds, UtilInterface util,
-                      Path corpus_path) {
+                      Path corpus_path, int n_threads) {
         this.stopwords = stopworlds;
         this.util = util;
         this.corpus_path = corpus_path;
+        System.setProperty("java.util.concurrent.ForkJoinPool.common.parallelism", String.valueOf(n_threads));
     }
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        java.nio.file.Path corpus_path = Path.of("datasets/test.csv");
-        TFiDFInterface tfidf = new Concurrent(stopwords, util, corpus_path);
+        java.nio.file.Path corpus_path = Path.of("datasets/train.csv");
+        TFiDFInterface tfidf = new Concurrent(stopwords, util, corpus_path, 12);
         tfidf.compute();
         System.out.println(tfidf.results());
     }

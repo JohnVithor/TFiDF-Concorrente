@@ -66,6 +66,8 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
                     tfidf = new jv.tfidf.atomic.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             case "ForkJoin Concurrent" ->
                     tfidf = new jv.tfidf.forkjoin.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
+            case "Stream Concurrent" ->
+                    tfidf = new jv.tfidf.stream.Concurrent(selected_stopwords, util, corpus_path, n_threads);
             default -> {
                 result.sampleStart();
                 result.sampleEnd();
