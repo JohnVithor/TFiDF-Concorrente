@@ -8,6 +8,7 @@ import jv.tfidf.executor.ProducerConsumerConcurrent;
 import jv.tfidf.executor.SmallTasksConcurrent;
 import jv.tfidf.naive.Serial;
 import jv.utils.ForEachApacheUtil;
+import jv.utils.ForEachJavaUtil;
 import jv.utils.UtilInterface;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 public class TFIDFSampler extends AbstractJavaSamplerClient {
 
-    private final UtilInterface util = new ForEachApacheUtil();
+    private final UtilInterface util = new ForEachJavaUtil();
     private final Set<String> stopworlds = util.load_stop_words("/home/johnvithor/UFRN/Concorrente/TFiDF-Concorrente/stopwords.txt");
 
     @Override
