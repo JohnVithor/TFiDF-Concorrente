@@ -23,7 +23,7 @@ import java.util.Set;
 
 public class TFIDFSampler extends AbstractJavaSamplerClient {
 
-    private final UtilInterface util = new ForEachJavaUtil();
+    private final UtilInterface util = new ForEachApacheUtil();
     private final Set<String> stopworlds = util.load_stop_words("/home/johnvithor/UFRN/Concorrente/TFiDF-Concorrente/stopwords.txt");
 
     @Override
@@ -67,6 +67,8 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
                     tfidf = new jv.tfidf.forkjoin.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             case "Stream Concurrent" ->
                     tfidf = new jv.tfidf.stream.Concurrent(selected_stopwords, util, corpus_path, n_threads);
+            case "Completable Future Concurrent" ->
+                    tfidf = new jv.tfidf.future.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             default -> {
                 result.sampleStart();
                 result.sampleEnd();
