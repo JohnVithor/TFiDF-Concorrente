@@ -4,3 +4,4 @@ Executor Concurrent
 Atomic Concurrent
 ForkJoin Concurrent
 Stream Concurrent
+Completable Future Concurrent
