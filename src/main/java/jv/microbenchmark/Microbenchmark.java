@@ -25,6 +25,7 @@ public class Microbenchmark {
 //                .include(ExecutorConcurrentRunner.class.getSimpleName())
 //                .include(AtomicConcurrentRunner.class.getSimpleName())
 //                .include(ForkJoinRunner.class.getSimpleName())
+//                .include(CompletableFutureRunner.class.getSimpleName())
                 .include(CompletableFutureRunner.class.getSimpleName())
                 .shouldDoGC(true)
                 .mode(Mode.Throughput)

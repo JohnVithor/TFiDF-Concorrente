@@ -69,6 +69,8 @@ public class TFIDFSampler extends AbstractJavaSamplerClient {
                     tfidf = new jv.tfidf.stream.Concurrent(selected_stopwords, util, corpus_path, n_threads);
             case "Completable Future Concurrent" ->
                     tfidf = new jv.tfidf.future.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
+            case "Concurrent Collections Concurrent" ->
+                    tfidf = new jv.tfidf.collections.Concurrent(selected_stopwords, util, corpus_path, n_threads, buffer_size);
             default -> {
                 result.sampleStart();
                 result.sampleEnd();
