@@ -6,7 +6,7 @@ import utils.UtilInterface;
 import java.util.HashMap;
 import java.util.Set;
 
-public class Compute_DF_ConsumerThread implements Runnable {
+public class DFConsumerRunnable implements Runnable {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;
@@ -15,10 +15,10 @@ public class Compute_DF_ConsumerThread implements Runnable {
 
     private final HashMap<String, Long> count;
 
-    public Compute_DF_ConsumerThread(MyBuffer<String> buffer,
-                                     UtilInterface util,
-                                     Set<String> stopwords,
-                                     String endline) {
+    public DFConsumerRunnable(MyBuffer<String> buffer,
+                              UtilInterface util,
+                              Set<String> stopwords,
+                              String endline) {
         this.buffer = buffer;
         this.util = util;
         this.stopwords = stopwords;

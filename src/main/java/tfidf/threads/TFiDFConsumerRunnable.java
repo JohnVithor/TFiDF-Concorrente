@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
-public class Compute_TFiDF_ConsumerThread implements Runnable {
+public class TFiDFConsumerRunnable implements Runnable {
 
     private final MyBuffer<String> buffer;
     private final UtilInterface util;
@@ -23,12 +23,12 @@ public class Compute_TFiDF_ConsumerThread implements Runnable {
     private double htfidf;
     private double ltfidf = Double.MAX_VALUE;
 
-    public Compute_TFiDF_ConsumerThread(MyBuffer<String> buffer,
-                                        UtilInterface util,
-                                        Set<String> stopwords,
-                                        String endline,
-                                        Map<String, Long> count,
-                                        long n_docs) {
+    public TFiDFConsumerRunnable(MyBuffer<String> buffer,
+                                 UtilInterface util,
+                                 Set<String> stopwords,
+                                 String endline,
+                                 Map<String, Long> count,
+                                 long n_docs) {
         this.buffer = buffer;
         this.util = util;
         this.stopwords = stopwords;

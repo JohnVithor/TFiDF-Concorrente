@@ -2,8 +2,8 @@ package tfidf;
 
 import records.Data;
 import records.TFiDFInfo;
-import tfidf.threads.Compute_DF_ConsumerThread;
-import tfidf.threads.Compute_TFiDF_ConsumerThread;
+import tfidf.threads.DFConsumerRunnable;
+import tfidf.threads.TFiDFConsumerRunnable;
 import utils.ForEachApacheUtil;
 import utils.MyBuffer;
 import utils.UtilInterface;
@@ -51,11 +51,11 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-        final List<Compute_DF_ConsumerThread> runnables = new ArrayList<>();
+        final List<DFConsumerRunnable> runnables = new ArrayList<>();
         final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_DF_ConsumerThread r = new Compute_DF_ConsumerThread(
+            DFConsumerRunnable r = new DFConsumerRunnable(
                     buffer, util, stopwords, endLine
             );
             runnables.add(r);
@@ -90,11 +90,11 @@ public class Concurrent implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() {
-        final List<Compute_TFiDF_ConsumerThread> runnables = new ArrayList<>();
+        final List<TFiDFConsumerRunnable> runnables = new ArrayList<>();
         final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(buffer_size);
         for (int i = 0; i < n_threads; ++i) {
-            Compute_TFiDF_ConsumerThread r = new Compute_TFiDF_ConsumerThread(
+            TFiDFConsumerRunnable r = new TFiDFConsumerRunnable(
                     buffer, util, stopwords, endLine, count, n_docs
             );
             runnables.add(r);
@@ -116,7 +116,7 @@ public class Concurrent implements TFiDFInterface {
             double ltfidf_final = Double.MAX_VALUE;
             for (int i = 0; i < n_threads; ++i) {
                 threads.get(i).join();
-                Compute_TFiDF_ConsumerThread r = runnables.get(i);
+                TFiDFConsumerRunnable r = runnables.get(i);
                 if (r.getHtfidf() > htfidf_final) {
                     htfidf_final = r.getHtfidf();
                     highest_tfidf.clear();

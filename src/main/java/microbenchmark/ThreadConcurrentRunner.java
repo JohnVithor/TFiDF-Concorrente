@@ -1,8 +1,8 @@
 package microbenchmark;
 
 import records.Data;
-import tfidf.threads.Compute_DF_ConsumerThread;
-import tfidf.threads.Compute_TFiDF_ConsumerThread;
+import tfidf.threads.DFConsumerRunnable;
+import tfidf.threads.TFiDFConsumerRunnable;
 import utils.MyBuffer;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.infra.Blackhole;
@@ -24,11 +24,11 @@ public class ThreadConcurrentRunner {
         List<String> most_frequent_terms = new ArrayList<>();
         Map<String, Long> count = new HashMap<>();
         int n_docs = 0;
-        final List<Compute_DF_ConsumerThread> runnables = new ArrayList<>();
+        final List<DFConsumerRunnable> runnables = new ArrayList<>();
         final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
         for (int i = 0; i < plan.n_threads; ++i) {
-            Compute_DF_ConsumerThread r = new Compute_DF_ConsumerThread(
+            DFConsumerRunnable r = new DFConsumerRunnable(
                     buffer, plan.util, plan.stopwords, endLine
             );
             runnables.add(r);
@@ -69,11 +69,11 @@ public class ThreadConcurrentRunner {
     public void compute_tfidf(TFiDFExecutionPlan plan, Blackhole blackhole) {
         List<Data> highest_tfidf = new ArrayList<>();
         List<Data> lowest_tfidf = new ArrayList<>();
-        final List<Compute_TFiDF_ConsumerThread> runnables = new ArrayList<>();
+        final List<TFiDFConsumerRunnable> runnables = new ArrayList<>();
         final List<Thread> threads = new ArrayList<>();
         final MyBuffer<String> buffer = new MyBuffer<>(plan.buffer_size);
         for (int i = 0; i < plan.n_threads; ++i) {
-            Compute_TFiDF_ConsumerThread r = new Compute_TFiDF_ConsumerThread(
+            TFiDFConsumerRunnable r = new TFiDFConsumerRunnable(
                     buffer, plan.util, plan.stopwords, endLine, plan.count, plan.n_docs
             );
             runnables.add(r);
@@ -95,7 +95,7 @@ public class ThreadConcurrentRunner {
             double ltfidf_final = Double.MAX_VALUE;
             for (int i = 0; i < plan.n_threads; ++i) {
                 threads.get(i).join();
-                Compute_TFiDF_ConsumerThread r = runnables.get(i);
+                TFiDFConsumerRunnable r = runnables.get(i);
                 if (r.getHtfidf() > htfidf_final) {
                     htfidf_final = r.getHtfidf();
                     highest_tfidf.clear();
