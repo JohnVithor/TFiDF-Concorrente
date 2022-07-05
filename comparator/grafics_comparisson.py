@@ -28,8 +28,8 @@ dados["Class"] = dados.Benchmark.str.split(".").str[1]
 classes = [
     "NaiveSerialRunner",
     "ThreadConcurrentRunner",
-    # "ExecutorConcurrentRunner",
-    # "AtomicConcurrentRunner",
+    "ExecutorConcurrentRunner",
+    "AtomicConcurrentRunner",
     ]
 
 dados = dados[dados["Class"].isin(classes)]

@@ -3,3 +3,4 @@ imgs/*
 Throughput
 .ipynb_checkpoints/*
 .pylintrc
+JMeter/*
