@@ -18,6 +18,13 @@ zfjpool["GC"] = "ZGC"
 shfjpool = pd.read_csv("./Throughput/Shenandoah_ForkJoin_Results.csv")
 shfjpool["GC"] = "ShenandoahGC"
 
+g1stream = pd.read_csv("./Throughput/G1_Stream_Results.csv")
+g1stream["GC"] = "G1GC"
+zstream = pd.read_csv("./Throughput/Z_Stream_Results.csv")
+zstream["GC"] = "ZGC"
+shstream = pd.read_csv("./Throughput/Shenandoah_Stream_Results.csv")
+shstream["GC"] = "ShenandoahGC"
+
 cg1gc = pd.read_csv("./Throughput/G1_Concurrent_Results.csv")
 cg1gc["GC"] = "G1GC"
 czgc = pd.read_csv("./Throughput/Z_Concurrent_Results.csv")
@@ -25,9 +32,10 @@ czgc["GC"] = "ZGC"
 cshenandoahgc = pd.read_csv("./Throughput/Shenandoah_Concurrent_Results.csv")
 cshenandoahgc["GC"] = "ShenandoahGC"
 
-dados = pd.concat([ sg1gc, szgc, sshenandoahgc, 
+dados = pd.concat([ sg1gc, szgc, sshenandoahgc,
                     cg1gc, czgc, cshenandoahgc,
-                    g1fjpool, zfjpool, shfjpool])
+                    g1fjpool, zfjpool, shfjpool,
+                    g1stream,zstream,shstream])
 dados.reset_index(inplace=True, drop=True)
 
 dados.Score = dados.Score.str.replace(',', '.').astype(float)
@@ -39,7 +47,8 @@ classes = [
     "ThreadConcurrentRunner",
     "ExecutorConcurrentRunner",
     "AtomicConcurrentRunner",
-    "ForkJoinRunner"
+    "ForkJoinRunner",
+    "StreamConcurrentRunner"
     ]
 
 dados = dados[dados["Class"].isin(classes)]
@@ -73,10 +82,13 @@ data.reset_index(inplace=True, drop=True)
 alvos=set(["compute_df", "compute_tfidf"])
 plt.figure(figsize=(10,5))
 g = sns.relplot(x="Threads", y="Score", col="Benchmark",
-                hue="Class", style="GC", kind="line",
+                hue="Class", style="GC", kind="line", markers=True,
                 ci="sd", palette="dark", alpha=.6,
                 data=data[data["Benchmark"].isin(alvos)])
+
 g.savefig("imgs/Throughput per Thread.png")
+
+
 
 alvos=set(["compute_df:·gc.alloc.rate", "compute_tfidf:·gc.alloc.rate"])
 plt.figure(figsize=(10,5))
