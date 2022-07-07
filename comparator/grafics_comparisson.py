@@ -11,6 +11,13 @@ szgc["GC"] = "ZGC"
 sshenandoahgc = pd.read_csv("./Throughput/Shenandoah_Serial_Results.csv")
 sshenandoahgc["GC"] = "ShenandoahGC"
 
+g1fjpool = pd.read_csv("./Throughput/G1_ForkJoin_Results.csv")
+g1fjpool["GC"] = "G1GC"
+zfjpool = pd.read_csv("./Throughput/Z_ForkJoin_Results.csv")
+zfjpool["GC"] = "ZGC"
+shfjpool = pd.read_csv("./Throughput/Shenandoah_ForkJoin_Results.csv")
+shfjpool["GC"] = "ShenandoahGC"
+
 cg1gc = pd.read_csv("./Throughput/G1_Concurrent_Results.csv")
 cg1gc["GC"] = "G1GC"
 czgc = pd.read_csv("./Throughput/Z_Concurrent_Results.csv")
@@ -18,7 +25,9 @@ czgc["GC"] = "ZGC"
 cshenandoahgc = pd.read_csv("./Throughput/Shenandoah_Concurrent_Results.csv")
 cshenandoahgc["GC"] = "ShenandoahGC"
 
-dados = pd.concat([sg1gc, szgc, sshenandoahgc, cg1gc, czgc, cshenandoahgc])
+dados = pd.concat([ sg1gc, szgc, sshenandoahgc, 
+                    cg1gc, czgc, cshenandoahgc,
+                    g1fjpool, zfjpool, shfjpool])
 dados.reset_index(inplace=True, drop=True)
 
 dados.Score = dados.Score.str.replace(',', '.').astype(float)
@@ -30,6 +39,7 @@ classes = [
     "ThreadConcurrentRunner",
     "ExecutorConcurrentRunner",
     "AtomicConcurrentRunner",
+    "ForkJoinRunner"
     ]
 
 dados = dados[dados["Class"].isin(classes)]
