@@ -2,7 +2,6 @@
 
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 
 thread = pd.read_csv("./JMeter/Thread.csv", sep=';')
 thread["Class"] = "Thread"
@@ -14,13 +13,15 @@ fjp = pd.read_csv("./JMeter/ForkJoin.csv", sep=';')
 fjp["Class"] = "ForkJoinPool"
 stm = pd.read_csv("./JMeter/Stream.csv", sep=';')
 stm["Class"] = "Stream"
-
+cbf = pd.read_csv("./JMeter/Future.csv", sep=';')
+cbf["Class"] = "Future"
 
 data = pd.concat([thread,
                   exe,
                   ato,
                   fjp,
-                  stm])
+                  stm,
+                  cbf])
 
 data.reset_index(inplace=True)
 # plt.figure(figsize=(10,10))

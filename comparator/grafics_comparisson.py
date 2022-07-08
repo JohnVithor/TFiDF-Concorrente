@@ -25,6 +25,13 @@ zstream["GC"] = "ZGC"
 shstream = pd.read_csv("./Throughput/Shenandoah_Stream_Results.csv")
 shstream["GC"] = "ShenandoahGC"
 
+g1future = pd.read_csv("./Throughput/G1_Future_Results.csv")
+g1future["GC"] = "G1GC"
+zfuture = pd.read_csv("./Throughput/Z_Future_Results.csv")
+zfuture["GC"] = "ZGC"
+shfuture = pd.read_csv("./Throughput/Shenandoah_Future_Results.csv")
+shfuture["GC"] = "ShenandoahGC"
+
 cg1gc = pd.read_csv("./Throughput/G1_Concurrent_Results.csv")
 cg1gc["GC"] = "G1GC"
 czgc = pd.read_csv("./Throughput/Z_Concurrent_Results.csv")
@@ -35,7 +42,8 @@ cshenandoahgc["GC"] = "ShenandoahGC"
 dados = pd.concat([ sg1gc, szgc, sshenandoahgc,
                     cg1gc, czgc, cshenandoahgc,
                     g1fjpool, zfjpool, shfjpool,
-                    g1stream,zstream,shstream])
+                    g1stream,zstream,shstream,
+                    g1future,zfuture,shfuture])
 dados.reset_index(inplace=True, drop=True)
 
 dados.Score = dados.Score.str.replace(',', '.').astype(float)
@@ -48,7 +56,8 @@ classes = [
     "ExecutorConcurrentRunner",
     "AtomicConcurrentRunner",
     "ForkJoinRunner",
-    "StreamConcurrentRunner"
+    "StreamConcurrentRunner",
+    "CompletableFutureRunner"
     ]
 
 dados = dados[dados["Class"].isin(classes)]
