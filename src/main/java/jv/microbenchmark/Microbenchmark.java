@@ -1,6 +1,7 @@
 package jv.microbenchmark;
 
 import jv.microbenchmark.runner.atomic.AtomicConcurrentRunner;
+import jv.microbenchmark.runner.collections.ConcurrentCollectionsRunner;
 import jv.microbenchmark.runner.executor.ExecutorConcurrentRunner;
 import jv.microbenchmark.runner.forkjoin.ForkJoinRunner;
 import jv.microbenchmark.runner.future.CompletableFutureRunner;
@@ -26,7 +27,7 @@ public class Microbenchmark {
 //                .include(AtomicConcurrentRunner.class.getSimpleName())
 //                .include(ForkJoinRunner.class.getSimpleName())
 //                .include(CompletableFutureRunner.class.getSimpleName())
-                .include(CompletableFutureRunner.class.getSimpleName())
+                .include(ConcurrentCollectionsRunner.class.getSimpleName())
                 .shouldDoGC(true)
                 .mode(Mode.Throughput)
                 .addProfiler(GCProfiler.class)
@@ -42,9 +43,9 @@ public class Microbenchmark {
 //                        ,"-XX:+UseParallelGC"
 //                        ,"-XX:+UseConcMarkSweepGC"
 //                        ,"-XX:+UseStringDeduplication"
-                        ,"-XX:+UseG1GC"
+//                        ,"-XX:+UseG1GC"
 //                        ,"-XX:+UseZGC"
-//                        ,"-XX:+UseShenandoahGC"
+                        ,"-XX:+UseShenandoahGC"
                 )
                 .result("results.csv")
                 .resultFormat(ResultFormatType.CSV)
