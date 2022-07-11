@@ -44,7 +44,7 @@ public class Concurrent implements TFiDFInterface {
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
         Path corpus_path = Path.of("datasets/train.csv");
         TFiDFInterface tfidf = new Concurrent(
-                stopwords, util, corpus_path, 4, 1000
+                stopwords, util, corpus_path, 12, 1000
         );
         tfidf.compute();
         System.out.println(tfidf.results());
