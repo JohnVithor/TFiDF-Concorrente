@@ -15,15 +15,35 @@ stm = pd.read_csv("./JMeter/Stream.csv", sep=';')
 stm["Class"] = "Stream"
 cbf = pd.read_csv("./JMeter/Future.csv", sep=';')
 cbf["Class"] = "Future"
+ccs = pd.read_csv("./JMeter/Collections.csv", sep=';')
+ccs["Class"] = "Collections"
 
 data = pd.concat([thread,
                   exe,
                   ato,
                   fjp,
                   stm,
-                  cbf])
+                  cbf,
+                  ccs])
 
 data.reset_index(inplace=True)
+# plt.figure(figsize=(10,10))
+g = sns.relplot(x="Threads", y="Milliseconds",
+                hue="Class", style="GC", kind="line", markers=True,
+                ci="sd", palette="dark", alpha=.6,
+                data=data, height=5, aspect=1.5)
+# g.set(xscale="log")
+g.savefig("imgs/Latency per Thread.png")
+
+data.reset_index(inplace=True)
+# plt.figure(figsize=(10,10))
+g = sns.relplot(x="Threads", y="Milliseconds",
+                hue="Class", style="GC", kind="line", markers=True,
+                ci="sd", palette="dark", alpha=.6,
+                data=data[data["Threads"] > 2], height=5, aspect=1.5)
+# g.set(xscale="log")
+g.savefig("imgs/Latency per Thread 2.png")
+
 # plt.figure(figsize=(10,10))
 g = sns.relplot(x="Threads", y="Throughput1",
                 hue="Class", style="GC", kind="line", markers=True,

@@ -107,28 +107,46 @@ g = sns.relplot(x="Threads", y="Score", col="Benchmark",
 g.savefig("imgs/Throughput per Thread.png")
 
 
-
 alvos=set(["compute_df:·gc.alloc.rate", "compute_tfidf:·gc.alloc.rate"])
 plt.figure(figsize=(10,5))
 g = sns.relplot(x="Threads", y="Score", col="Benchmark",
-                hue="Class", style="GC", kind="line",
+                hue="Class", style="GC", kind="line", markers=True,
                 ci="sd", palette="dark", alpha=.6,
                 data=data[data["Benchmark"].isin(alvos)])
 g.savefig("imgs/GC allocation rate per Thread.png")
 
 dataC = data[data.Class != "NaiveSerialRunner"]
+dataC = dataC[dataC.Class != "StreamConcurrentRunner"]
 alvos=set(["compute_df:·gc.alloc.rate", "compute_tfidf:·gc.alloc.rate"])
 plt.figure(figsize=(10,5))
 g = sns.relplot(x="Threads", y="Score", col="Benchmark",
-                hue="Class", style="GC", kind="line",
+                hue="Class", style="GC", kind="line", markers=True,
                 ci="sd", palette="dark", alpha=.6,
                 data=dataC[dataC["Benchmark"].isin(alvos)])
 g.savefig("imgs/Concurrent GC allocation rate per Thread.png")
 
+alvos=set(["compute_df:·gc.alloc.rate.norm", "compute_tfidf:·gc.alloc.rate.norm"])
+plt.figure(figsize=(10,5))
+g = sns.relplot(x="Threads", y="Score", col="Benchmark",
+                hue="Class", style="GC", kind="line", markers=True,
+                ci="sd", palette="dark", alpha=.6,
+                data=data[data["Benchmark"].isin(alvos)])
+g.savefig("imgs/Norm GC allocation rate per Thread.png")
+
+dataC = data[data.Class != "NaiveSerialRunner"]
+dataC = dataC[dataC.Class != "StreamConcurrentRunner"]
+alvos=set(["compute_df:·gc.alloc.rate.norm", "compute_tfidf:·gc.alloc.rate.norm"])
+plt.figure(figsize=(10,5))
+g = sns.relplot(x="Threads", y="Score", col="Benchmark",
+                hue="Class", style="GC", kind="line", markers=True,
+                ci="sd", palette="dark", alpha=.6,
+                data=dataC[dataC["Benchmark"].isin(alvos)])
+g.savefig("imgs/Norm Concurrent GC allocation rate per Thread.png")
+
 alvos=set(["compute_df:·gc.time", "compute_tfidf:·gc.time"])
 plt.figure(figsize=(10,5))
 g = sns.relplot(x="Threads", y="Score", col="Benchmark",
-                hue="Class", style="GC", kind="line",
+                hue="Class", style="GC", kind="line", markers=True,
                 ci="sd", palette="dark", alpha=.6,
                 data=data[data["Benchmark"].isin(alvos)])
 g.savefig("imgs/GC time spent per Thread.png")
@@ -136,7 +154,7 @@ g.savefig("imgs/GC time spent per Thread.png")
 alvos=set(["compute_df:·gc.count", "compute_tfidf:·gc.count"])
 plt.figure(figsize=(10,5))
 g = sns.relplot(x="Threads", y="Score", col="Benchmark",
-                hue="Class", style="GC", kind="line",
+                hue="Class", style="GC", kind="line", markers=True,
                 ci="sd", palette="dark", alpha=.6,
                 data=data[data["Benchmark"].isin(alvos)])
 g.savefig("imgs/GC counts per Thread.png")
