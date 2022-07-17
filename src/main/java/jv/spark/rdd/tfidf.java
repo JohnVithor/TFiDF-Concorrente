@@ -1,12 +1,10 @@
 package jv.spark.rdd;
 
 import jv.records.Data;
-import jv.records.Document;
 import jv.records.TFiDFInfo;
 import jv.tfidf.TFiDFInterface;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -15,13 +13,7 @@ import scala.Tuple2;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.LongAdder;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class tfidf implements TFiDFInterface {
     private final Set<String> stopwords;
@@ -47,7 +39,7 @@ public class tfidf implements TFiDFInterface {
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        String corpus_path = "datasets/train.csv";
+        String corpus_path = "datasets/10.csv";
         TFiDFInterface tfidf = new tfidf(stopwords, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
