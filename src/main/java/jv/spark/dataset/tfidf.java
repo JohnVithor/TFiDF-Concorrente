@@ -5,6 +5,8 @@ import jv.records.TFiDFInfo;
 import jv.spark.rdd.EvalDocumentFunctor;
 import jv.spark.rdd.SetOfTermsFunctor;
 import jv.tfidf.TFiDFInterface;
+import jv.tfidf.stream.collectors.MaxTermCount;
+import jv.tfidf.stream.collectors.MaxTermCountCollector;
 import jv.utils.ForEachApacheUtil;
 import jv.utils.UtilInterface;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -66,40 +68,44 @@ public class tfidf implements TFiDFInterface {
     }
 
     @Override
-    public void compute_df() {
-
+    public void compute() {
         final Dataset<Row> df = spark.read().format("csv")
-                .option("delimiter", ";").option("header", false)
+                .option("delimiter", ",").option("header", false)
                 .schema(schema).load(corpus_path);
         df.createOrReplaceTempView("data");
         df.printSchema();
 
-        final Dataset<Row> df2 = spark.sql("SELECT id,CONCAT(title, ' ', content) AS content FROM data");
+        final Dataset<Row> df2 = spark.sql("SELECT id, CONCAT(title, ' ', content) AS content FROM data");
         df2.createOrReplaceTempView("data");
-
         n_docs = df2.count();
-        df2.show(5);
+
         spark.udf().register("setOfTerms", new SetOfTermsUDF(stopwords), DataTypes.createArrayType(DataTypes.StringType));
-
         final Dataset<Row> setOfTerms = df2.withColumn("terms", callUDF("setOfTerms", col("content")));
-        setOfTerms.show(5);
         setOfTerms.createOrReplaceTempView("data");
-
-        final Dataset<Row> setOfTermsLen = setOfTerms.withColumn("terms_len",size(col("terms")));
-        setOfTermsLen.createOrReplaceTempView("data");
-        setOfTermsLen.show(5);
-
         final Dataset<Row> termsCount = spark.sql("SELECT id, explode(terms) AS term from data")
-                .groupBy(col("id"), col("term")).count().orderBy(col("id").asc(),col("term").asc());
+                .groupBy(col("id"), col("term")).
+                count().orderBy(col("id").asc(),col("term").asc());
         termsCount.createOrReplaceTempView("termsCount");
-        termsCount.show(20);
+        termsCount.show(5);
+        count = new HashMap<>();
+        termsCount.collectAsList().forEach(row -> count.put(row.getString(1), row.getLong(2)));
+        MaxTermCount r = this.count.entrySet()
+                .stream().parallel().collect(new MaxTermCountCollector());
+        most_frequent_term_count = r.getMax_count();
+        most_frequent_terms = r.getTerms().stream().sequential().sorted().toList();
 
-//        final JavaPairRDD<String, Long> ones = setOfTerms.mapToPair(s -> new Tuple2<>(s, 1L));
-//        count = setOfTerms.countByValue();
-//        final JavaPairRDD<String, Long> counts = ones.reduceByKey(Long::sum);
-//        Tuple2<String,Long> r = counts.max(new TupleComparator());
-//        most_frequent_term_count = r._2();
-//        most_frequent_terms = Collections.singletonList(r._1());
+        termsCount.show(5);
+        spark.udf().register("evalDocs", new EvalDocumentUDF(stopwords, count, n_docs), DataTypes.createMapType(DataTypes.StringType,DataTypes.DoubleType));
+        final Dataset<Row> datas = df2.withColumn("datas", callUDF("evalDocs", col("content")));
+        datas.createOrReplaceTempView("data");
+        final Dataset<Row> datasraw = spark.sql("SELECT id, datas from data");
+        datasraw.show(5);
+
+    }
+
+    @Override
+    public void compute_df() {
+
     }
 
      @Override

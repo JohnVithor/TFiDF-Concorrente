@@ -9,7 +9,7 @@ import org.apache.spark.sql.api.java.UDF1;
 import java.io.Serial;
 import java.util.*;
 
-public class EvalDocumentUDF implements UDF1<String, List<Data>> {
+public class EvalDocumentUDF implements UDF1<String, Map<String,Double>> {
 
     @Serial
     private static final long serialVersionUID = -465848;
@@ -39,16 +39,8 @@ public class EvalDocumentUDF implements UDF1<String, List<Data>> {
     }
 
     @Override
-    public List<Data> call(String line) throws Exception {
-        int pos = 1, end;
-        end = StringUtils.indexOf(line, "\";\"", pos);
-        int id = Integer.parseInt(StringUtils.substring(line, pos, end));
-        pos = end + 3;
-        end = StringUtils.indexOf(line, "\";\"", pos);
-        String text = StringUtils.substring(line, pos, end);
-        pos = end + 3;
-        text = text + " " + StringUtils.substring(line, pos, line.length());
-        text = normalize(StringUtils.lowerCase(StringUtils.chop(text)));
+    public Map<String,Double> call(String line) throws Exception {
+        String text = normalize(line);
         Map<String, Long> counts = new HashMap<>();
         int total = 0;
         for (String term : StringUtils.split(text, ' ')) {
@@ -57,11 +49,15 @@ public class EvalDocumentUDF implements UDF1<String, List<Data>> {
                 total += 1;
             }
         }
-        Document doc =  new Document(id, counts, total);
-        return doc.counts().entrySet().stream().map(e -> {
-            double idf = Math.log(n_docs / (double) count.get(e.getKey()));
-            double tf = e.getValue() / (double) doc.n_terms();
-            return new Data(e.getKey(), doc.id(), tf * idf);
-        }).toList();
+        int finalTotal = total;
+
+        Map<String, Double> tfidfs = new HashMap<>();
+        counts.forEach((s, aLong) -> {
+            double idf = Math.log(n_docs / (double) count.get(s));
+            double tf = aLong / (double) finalTotal;
+            tfidfs.put(s, tf*idf);
+        });
+
+        return tfidfs;
     }
 }
