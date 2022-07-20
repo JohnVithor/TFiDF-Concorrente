@@ -32,14 +32,14 @@ public class tfidf implements TFiDFInterface {
         this.corpus_path = corpus_path;
         final SparkConf sparkConf = new SparkConf().
                 setAppName("TFiDF").
-                setMaster("local");
+                setMaster("local[*]");
         spark = new JavaSparkContext(sparkConf);
     }
 
     public static void main(String[] args) throws IOException {
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        String corpus_path = "datasets/10.csv";
+        String corpus_path = "datasets/train.csv";
         TFiDFInterface tfidf = new tfidf(stopwords, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
@@ -54,7 +54,6 @@ public class tfidf implements TFiDFInterface {
 
     @Override
     public void compute_df() {
-
         final JavaRDD<String> lines = spark.textFile(corpus_path);
         n_docs = lines.count();
         final JavaRDD<String> setOfTerms = lines.flatMap(new SetOfTermsFunctor(stopwords));
@@ -75,7 +74,6 @@ public class tfidf implements TFiDFInterface {
 
     @Override
     public void compute_tfidf() {
-
         final JavaRDD<String> lines = spark.textFile(corpus_path);
         final JavaRDD<Data> datas = lines.flatMap(new EvalDocumentFunctor(stopwords, count, n_docs));
         Data max = datas.max(new DataComparator());

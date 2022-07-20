@@ -69,12 +69,12 @@ public class tfidf implements TFiDFInterface {
     public void compute_df() {
 
         final Dataset<Row> df = spark.read().format("csv")
-                .option("delimiter", ",").option("header", false)
+                .option("delimiter", ";").option("header", false)
                 .schema(schema).load(corpus_path);
         df.createOrReplaceTempView("data");
         df.printSchema();
 
-        final Dataset<Row> df2 = spark.sql("SELECT CONCAT(title, ' ', content) AS content FROM data");
+        final Dataset<Row> df2 = spark.sql("SELECT id,CONCAT(title, ' ', content) AS content FROM data");
         df2.createOrReplaceTempView("data");
 
         n_docs = df2.count();
@@ -89,10 +89,10 @@ public class tfidf implements TFiDFInterface {
         setOfTermsLen.createOrReplaceTempView("data");
         setOfTermsLen.show(5);
 
-        final Dataset<Row> termsCount = spark.sql("SELECT explode(terms) AS term from data")
-                .groupBy(col("term")).count().orderBy(col("count").desc());
+        final Dataset<Row> termsCount = spark.sql("SELECT id, explode(terms) AS term from data")
+                .groupBy(col("id"), col("term")).count().orderBy(col("id").asc(),col("term").asc());
         termsCount.createOrReplaceTempView("termsCount");
-        termsCount.show(5);
+        termsCount.show(20);
 
 //        final JavaPairRDD<String, Long> ones = setOfTerms.mapToPair(s -> new Tuple2<>(s, 1L));
 //        count = setOfTerms.countByValue();
