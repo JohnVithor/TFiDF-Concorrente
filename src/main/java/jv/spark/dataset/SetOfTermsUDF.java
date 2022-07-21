@@ -22,6 +22,9 @@ public class SetOfTermsUDF implements UDF1<String, List<String>>{
     }
 
     public String normalize(String source) {
+        if (source == null) {
+            return "";
+        }
         StringBuilder result = new StringBuilder();
         char one;
         for (int i = 0; i < source.length(); ++i) {

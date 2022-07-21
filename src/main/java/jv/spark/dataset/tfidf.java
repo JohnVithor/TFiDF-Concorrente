@@ -21,6 +21,8 @@ import scala.Tuple2;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 import static org.apache.spark.sql.functions.*;
@@ -43,7 +45,7 @@ public class tfidf implements TFiDFInterface {
         this.corpus_path = corpus_path;
         spark = SparkSession.builder()
                 .appName("TFiDF")
-                .master("local")
+                .master("local[*]")
                 .getOrCreate();
         schema = DataTypes.createStructType(new StructField[]{
                 DataTypes.createStructField(
@@ -59,21 +61,23 @@ public class tfidf implements TFiDFInterface {
     }
 
     public static void main(String[] args) throws IOException {
+        Instant start = Instant.now();
         UtilInterface util = new ForEachApacheUtil();
         Set<String> stopwords = util.load_stop_words("stopwords.txt");
-        String corpus_path = "datasets/10.csv";
+        String corpus_path = "datasets/train.csv";
         TFiDFInterface tfidf = new tfidf(stopwords, corpus_path);
         tfidf.compute();
         System.out.println(tfidf.results());
+        Instant end = Instant.now();
+        System.err.println(Duration.between(start, end).toMillis());
     }
 
     @Override
     public void compute() {
         final Dataset<Row> df = spark.read().format("csv")
-                .option("delimiter", ",").option("header", false)
+                .option("delimiter", ";").option("header", false)
                 .schema(schema).load(corpus_path);
         df.createOrReplaceTempView("data");
-        df.printSchema();
 
         final Dataset<Row> df2 = spark.sql("SELECT id, CONCAT(title, ' ', content) AS content FROM data");
         df2.createOrReplaceTempView("data");
@@ -86,15 +90,9 @@ public class tfidf implements TFiDFInterface {
                 .groupBy(col("id"), col("term")).
                 count().orderBy(col("id").asc(),col("term").asc());
         termsCount.createOrReplaceTempView("termsCount");
-        termsCount.show(5);
         count = new HashMap<>();
         termsCount.collectAsList().forEach(row -> count.put(row.getString(1), row.getLong(2)));
-        MaxTermCount r = this.count.entrySet()
-                .stream().parallel().collect(new MaxTermCountCollector());
-        most_frequent_term_count = r.getMax_count();
-        most_frequent_terms = r.getTerms().stream().sequential().sorted().toList();
 
-        termsCount.show(5);
         spark.udf().register("evalDocs", new EvalDocumentUDF(stopwords, count, n_docs), DataTypes.createMapType(DataTypes.StringType,DataTypes.DoubleType));
         final Dataset<Row> datas = df2.withColumn("datas", callUDF("evalDocs", col("content")));
         datas.createOrReplaceTempView("data");
